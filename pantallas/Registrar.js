@@ -4,7 +4,6 @@ import { useNavigation } from '@react-navigation/native';
 import Feather from '@expo/vector-icons/Feather';
 import { Picker } from '@react-native-picker/picker';
 import { auth, db } from '../FirebaseConf';
-import firebase from 'firebase';
 
 export default function PantallaDeInicio() {
   const [nombre, setNombre] = useState('');
@@ -73,7 +72,7 @@ export default function PantallaDeInicio() {
       // 4. Guardar datos en Firestore
       await db.collection('usuarios').doc(user.uid).set({
         nombre,
-        apellido,
+        apellido,  
         tipoDocumento,
         numeroDocumento,
         email,

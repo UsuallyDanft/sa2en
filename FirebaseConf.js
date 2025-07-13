@@ -1,4 +1,8 @@
-import firebase from "firebase"
+// Importa las funciones necesarias de los SDKs de Firebase que uses
+import { initializeApp } from 'firebase/app';
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { getFirestore } from 'firebase/firestore';
 
 const FirebaseConf = {
   apiKey: "AIzaSyArr-DeYgLxsVOdUa_Z4nZyD7W_J5EKdfU",
@@ -11,11 +15,14 @@ const FirebaseConf = {
 };
 
 // Inicializar Firebase 
-if (!firebase.apps.length) {
-  firebase.initializeApp(FirebaseConf)
-}
+// Inicializa Firebase.
+const app = initializeApp(FirebaseConf);
 
-export const auth = firebase.auth();
-export const db = firebase.firestore();
-export default firebase;
+// Inicializa Firebase Auth con persistencia
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+});
 
+export const db = getFirestore(app);
+// Si exportabas 'firebase' antes y lo necesitas, puedes exportar 'app'
+export default app;
