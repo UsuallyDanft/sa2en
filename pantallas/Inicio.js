@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import {View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity,} from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import Feather from '@expo/vector-icons/Feather' // Iconos
+import { auth } from '../FirebaseConf'
+import { signInWithEmailAndPassword } from 'firebase/auth'
 
 export default function PantallaDeInicio() {
   // Guardan los valores de los inputs
@@ -16,13 +18,19 @@ export default function PantallaDeInicio() {
   const [errorMessage, setErrorMessage] = useState('')  // Almacena mensajes de error de validación.
   const navigation = useNavigation()
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       setErrorMessage('Por favor, complete todos los campos.')
       return;
     }
-    setErrorMessage('');
-    navigation.navigate('P1Admin')
+    
+    try {
+      setErrorMessage('');
+      await signInWithEmailAndPassword(auth, email, password);
+      // La navegación se manejará automáticamente por el AuthContext
+    } catch (error) {
+      setErrorMessage('Credenciales incorrectas. Verifique su email y contraseña.');
+    }
   };
 
   return (

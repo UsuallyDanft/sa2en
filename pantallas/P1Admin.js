@@ -1,10 +1,21 @@
 import { View, StyleSheet, ImageBackground, Image, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { auth } from '../FirebaseConf';
+import { signOut } from 'firebase/auth';
 
 
 export default function PantallaDeInicio() {
   
   const navigation = useNavigation();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      // La navegación se manejará automáticamente por el AuthContext
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
 
   return (
     <ImageBackground source={require('../assets/Fondo2.jpg')} style={styles.container}>
@@ -30,6 +41,11 @@ export default function PantallaDeInicio() {
         <TouchableOpacity style={styles.button}
         onPress={() => navigation.navigate('Registro')}>
         <Text style={styles.buttonText}>Comenzar</Text>
+        </TouchableOpacity>
+
+        {/* Botón de cerrar sesión */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
         </TouchableOpacity>
 
       </View>
@@ -105,6 +121,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'justify',
     color: '#000',
+  },
+
+  logoutButton: {
+    width: '100%',
+    backgroundColor: '#dc3545',
+    padding: 15,
+    borderRadius: 40,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 
 });

@@ -4,6 +4,8 @@ import { useNavigation } from '@react-navigation/native';
 import Feather from '@expo/vector-icons/Feather';
 import { Picker } from '@react-native-picker/picker';
 import { auth, db } from '../FirebaseConf';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 export default function PantallaDeInicio() {
   const [nombre, setNombre] = useState('');
@@ -49,7 +51,8 @@ export default function PantallaDeInicio() {
 
     try {
       // 1. Verificar si el correo está autorizado
-      const emailSnapshot = await db.collection('emailsAutorizados').where('email', '==', email).get();
+      const emailQuery = query(collection(db, 'emailsAutorizados'), where('email', '==', email));
+      const emailSnapshot = await getDocs(emailQuery);
       
       if (emailSnapshot.empty) {
         Alert.alert('Error', 'Este correo no está autorizado para registrarse.');
@@ -66,22 +69,22 @@ export default function PantallaDeInicio() {
       }
 
       // 3. Crear usuario en Auth
-      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       // 4. Guardar datos en Firestore
-      await db.collection('usuarios').doc(user.uid).set({
+      await setDoc(doc(db, 'usuarios', user.uid), {
         nombre,
         apellido,  
         tipoDocumento,
         numeroDocumento,
         email,
         tipoUsuario: rolAutorizado, // Usamos el rol autorizado
-        fechaRegistro: firebase.firestore.FieldValue.serverTimestamp(),
+        fechaRegistro: new Date(),
       });
 
       Alert.alert('Éxito', 'Usuario registrado correctamente');
-      navigation.navigate(rolAutorizado === 'admin' ? 'P1Admin' : 'Principal');
+      // La navegación se manejará automáticamente por el AuthContext
       
     } catch (error) {
       console.error('Error en registro:', error);
