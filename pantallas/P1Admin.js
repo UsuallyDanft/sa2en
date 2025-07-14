@@ -7,7 +7,7 @@ export default function PantallaDeInicio() {
   const navigation = useNavigation();
 
   return (
-    <ImageBackground source={require('../assets/Fondo2.png')} style={styles.container}>
+    <ImageBackground source={require('../assets/Fondo2.jpg')} style={styles.container}>
       
       <Image source={require('../assets/Logo.png')} style={styles.logo} />
 
