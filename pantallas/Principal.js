@@ -1,6 +1,5 @@
 import { View, Text, ImageBackground, Image, TouchableOpacity, StyleSheet } from 'react-native'
 
-
 // Importación de las pantallas de navegación
 import {useNavigation} from '@react-navigation/native'
 
@@ -22,7 +21,7 @@ export default function Principal() {
       {/* Botón para Iniciar sesión */}
       <TouchableOpacity style={styles.button}
       onPress={() => navigation.navigate('Inicio')} >
-      <Text style={styles.buttonText}>Iniciar sesión</Text>
+        <Text style={styles.buttonText}>Iniciar sesión</Text>
       </TouchableOpacity>
 
       {/* Texto con enlace a la pantalla de Registrar */}
@@ -51,7 +50,6 @@ const styles = StyleSheet.create({
     marginBottom: 350,
   },
 
-
   button: {
     backgroundColor: 'rgba(166, 200, 252, 0.21)', // Color de fondo con opacidad (HEX A6C8FC y 21% de  transparencia)
     paddingVertical: 12,
@@ -63,7 +61,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF', // Color de texto del botón (blanco)
     fontSize: 16,
     fontWeight: 'bold',
-    
   },
   registerTextContainer: {
     flexDirection: 'row',
