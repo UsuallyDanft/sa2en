@@ -103,6 +103,7 @@ export default function PantallaDeInicio() {
       <View style={styles.formContainer}>
         <View style={styles.errorMessage}>
           {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+          }
         </View>
 
         <TextInput
