@@ -13,19 +13,19 @@ export default function Principal() {
       source={require('../assets/Fondo1.png')} // La imagen de fondo en la carpeta assets
       style={styles.container} // Estilos para la pantalla
     >
-         /* Logo */
+      {/* Logo */}
       <Image 
         source={require('../assets/Logo.png')} 
         style={styles.logo} // Para dar estilos al logo
       />
 
-      /* Botón para Iniciar sesión */
+      {/* Botón para Iniciar sesión */}
       <TouchableOpacity style={styles.button}
       onPress={() => navigation.navigate('Inicio')} >
       <Text style={styles.buttonText}>Iniciar sesión</Text>
       </TouchableOpacity>
 
-      /* Texto con enlace a la pantalla de Registrar */
+      {/* Texto con enlace a la pantalla de Registrar */}
       <View style={styles.registerTextContainer}>
         <Text style={styles.text}>¿No tienes una cuenta? </Text>
         <TouchableOpacity onPress={() => navigation.navigate('Registrar')}>
@@ -36,7 +36,7 @@ export default function Principal() {
   )
 }
 
-/*Estilos de la pantalla*/
+/* Estilos de la pantalla */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
