@@ -35,5 +35,5 @@ export const db = getFirestore(app);
 // Exportar serverTimestamp para uso en toda la aplicación
 export { serverTimestamp };
 
-// Si exportabas 'firebase' antes y lo necesitas, puedes exportar 'app'
+// Si exportabas 'firebase' antes y lo necesitas, puedes exportar 'app' HOLA GENTE DE PERU
 export default app;
