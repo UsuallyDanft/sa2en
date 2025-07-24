@@ -3,7 +3,9 @@ import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpa
 import { useNavigation } from '@react-navigation/native';
 import Feather from '@expo/vector-icons/Feather';
 import { Picker } from '@react-native-picker/picker';
-import { auth, db } from '../FirebaseConf';
+import { auth, db, serverTimestamp } from '../FirebaseConf';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
 
 export default function PantallaDeInicio() {
   const [nombre, setNombre] = useState('');
@@ -49,35 +51,34 @@ export default function PantallaDeInicio() {
 
     try {
       // 1. Verificar si el correo está autorizado
-      const emailSnapshot = await db.collection('emailsAutorizados').where('email', '==', email).get();
+      const q = query(collection(db, 'emailsAutorizados'), where('email', '==', email));
+      const querySnapshot = await getDocs(q);
       
-      if (emailSnapshot.empty) {
-        Alert.alert('Error', 'Este correo no está autorizado para registrarse.');
-        return;
+      if (querySnapshot.empty) {
+        throw new Error('Este correo no está autorizado para registrarse');
       }
 
-      const userData = emailSnapshot.docs[0].data();
+      const userData = querySnapshot.docs[0].data();
       const rolAutorizado = userData.rol;
 
       // 2. Validar rol admin
       if (tipoUsuario === 'admin' && rolAutorizado !== 'admin') {
-        Alert.alert('Error', 'No tienes permiso para registrarte como administrador.');
-        return;
+        throw new Error('No tienes permiso para registrarte como administrador.');
       }
 
       // 3. Crear usuario en Auth
-      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       // 4. Guardar datos en Firestore
-      await db.collection('usuarios').doc(user.uid).set({
+      await setDoc(doc(db, 'usuarios', user.uid), {
         nombre,
         apellido,  
         tipoDocumento,
         numeroDocumento,
         email,
         tipoUsuario: rolAutorizado, // Usamos el rol autorizado
-        fechaRegistro: firebase.firestore.FieldValue.serverTimestamp(),
+        fechaRegistro: serverTimestamp(),
       });
 
       Alert.alert('Éxito', 'Usuario registrado correctamente');
@@ -244,7 +245,6 @@ export default function PantallaDeInicio() {
   )
 }
 
-// Los estilos se mantienen exactamente igual que en tu código original
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -3,7 +3,7 @@ import { View, TextInput, StyleSheet, Text, TouchableOpacity, Alert, ScrollView 
 import { Picker } from '@react-native-picker/picker';
 import { db } from '../FirebaseConf';
 import { auth } from '../FirebaseConf';
-import firebase from 'firebase/app';
+import { collection, addDoc, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function CrearEquipo() {
   const [email, setEmail] = useState('');
@@ -20,24 +20,26 @@ export default function CrearEquipo() {
     setLoading(true);
 
     try {
-      // Verificar si el usuario actual es admin
       const currentUser = auth.currentUser;
       if (!currentUser) {
         throw new Error('No hay usuario autenticado');
       }
 
-      const userDoc = await db.collection('usuarios').doc(currentUser.uid).get();
+      const userDoc = await getDoc(doc(db, 'usuarios', currentUser.uid));
+      if (!userDoc.exists()) {
+        throw new Error('Usuario no encontrado');
+      }
+
       if (userDoc.data().tipoUsuario !== 'admin') {
         throw new Error('Solo los administradores pueden crear equipos');
       }
 
-      // Crear registro en emailsAutorizados
-      await db.collection('emailsAutorizados').doc(email).set({
+      await setDoc(doc(db, 'emailsAutorizados', email), {
         email: email,
         tipoCuenta: tipoCuenta,
         rol: rol,
         creadoPor: currentUser.email,
-        fechaCreacion: firebase.firestore.FieldValue.serverTimestamp()
+        fechaCreacion: serverTimestamp()
       });
 
       Alert.alert('Éxito', 'Usuario autorizado registrado correctamente');
