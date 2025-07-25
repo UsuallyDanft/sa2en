@@ -35,4 +35,4 @@ export const db = getFirestore(app);
 // Exportar serverTimestamp para uso en toda la aplicación
 export { serverTimestamp };
 
-// UN SALUDO GENTE DE LIMAAAAA!!!
+// Ahora explicame como hago para hacer las pantallas? en archivos diferentes, todo desde un js o como es?!!!
