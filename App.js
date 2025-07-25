@@ -1,99 +1,13 @@
-import { NavigationContainer } from '@react-navigation/native'
-import { createStackNavigator } from '@react-navigation/stack'
-import firebase from "./FirebaseConf"
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
 
-
-// Importación de las pantallas
-import Principal from './pantallas/Principal'
-import Inicio from './pantallas/Inicio'
-import Recuperar from './pantallas/Recuperar'
-import Registrar from './pantallas/Registrar'
-import P1Admin from './pantallas/P1Admin'
-import Registro from './pantallas/Registro'
-import Equipo from './pantallas/Equipo'
-import Cajachica from './pantallas/Cajachica'
-import Movimientos from './pantallas/Movimientos'
-import NewM from './pantallas/NewM'
-import Menu from './pantallas/Menu'
-
-
-const Stack = createStackNavigator()
+// Importa tu nuevo componente de navegación
+import MainNavigator from './navegacion/stackNavigation';
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="P1Admin">
- <Stack.Screen name="Principal"
-                      component={Principal} 
-                      options={{ headerShown: false }} /*Para eliminar el encabezado*/ 
-                      />
-        <Stack.Screen name="Inicio" 
-                      component={Inicio} 
-                      options={{ headerShown: false }}
-                      />
-        <Stack.Screen name="Recuperar" 
-                      component={Recuperar} 
-                      options={{ headerShown: false }}
-                      />
-        <Stack.Screen name="Registrar" 
-                      component={Registrar}
-                      options={{ headerShown: false }}
-                      />
-
-        <Stack.Screen name="P1Admin" 
-                      component={P1Admin} 
-                      options={{ headerShown: false }}
-                      />
-
-        <Stack.Screen name="Registro" 
-                      component={Registro} 
-                      options={{ headerShown: false }}
-                      />
-
-        <Stack.Screen name="Equipo" 
-                      component={Equipo} 
-                      options={{ headerShown: false }}
-                      />
-
-        <Stack.Screen name="Cajachica" 
-                      component={Cajachica} 
-                      options={{ headerShown: false }}
-                      />
-
-             <Stack.Screen name="Movimientos" 
-                      component={Movimientos} 
-                      options={{ headerShown: false }}
-                      />      
-
-             <Stack.Screen name="NewM" 
-                      component={NewM} 
-                      options={{ headerShown: false }}
-                      />
-
-            <Stack.Screen name="Menu" 
-                      component={Menu} 
-                      options={{ headerShown: false }}
-                      />
-
-      </Stack.Navigator>
+      <MainNavigator />
     </NavigationContainer>
-  )
+  );
 }
-
-/*  Componentes de React Native:
-
-View: Contenedor básico.
-
-TextInput: Campos de entrada de texto.
-
-StyleSheet: Para los estilos.
-
-ImageBackground: Fondo de pantalla.
-
-Image: Imagen del logo.
-
-Text: Etiquetas de texto.
-
-TouchableOpacity: Botón presionable.
-
-useNavigation: Se usa para navegar entre pantallas.  */

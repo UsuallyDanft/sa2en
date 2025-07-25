@@ -3,20 +3,20 @@ import { initializeApp } from 'firebase/app';
 import {
   initializeAuth,
   getReactNativePersistence, // Para nativo
-  browserLocalPersistence      // Para la web
+  browserLocalPersistence   // Para la web
 } from 'firebase/auth';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { getFirestore, serverTimestamp } from 'firebase/firestore';
 import { Platform } from 'react-native'; // Importante para detectar la plataforma
 
+// Datos extraídos del JSON proporcionado
 const FirebaseConf = {
-  apiKey: "AIzaSyArr-DeYgLxsVOdUa_Z4nZyD7W_J5EKdfU",
-  authDomain: "caja-chica-app-abaa0.firebaseapp.com",
-  projectId: "caja-chica-app-abaa0",
-  storageBucket: "caja-chica-app-abaa0.appspot.com",
-  messagingSenderId: "201937593149",
-  appId: "1:201937593149:web:1caf1f808f84738ed8db54",
-  measurementId: "G-218QCCLFC2"
+  apiKey: "AIzaSyCt9L4LzFJK2icufGt0HYiuGwhgKxhM7v0",
+  authDomain: "sa2en-app.firebaseapp.com",
+  projectId: "sa2en-app",
+  storageBucket: "sa2en-app.appspot.com", // O "sa2en-app.firebasestorage.app"
+  messagingSenderId: "493790722792",
+  appId: "1:493790722792:android:c1f0badd73bbad9d25a75d"
 };
 
 // Inicializar Firebase 
@@ -29,10 +29,8 @@ export const auth = initializeAuth(app, {
     : getReactNativePersistence(ReactNativeAsyncStorage) // Usa esta para iOS/Android
 });
 
-// Inicializa otros servicios de Firebase que necesites
+
 export const db = getFirestore(app);
 
-// Exportar serverTimestamp para uso en toda la aplicación
-export { serverTimestamp };
 
-// Ahora explicame como hago para hacer las pantallas? en archivos diferentes, todo desde un js o como es?!!!
+export { serverTimestamp };
