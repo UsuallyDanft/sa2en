@@ -1,28 +1,125 @@
-import React, { useState } from 'react'
-import {View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity,} from 'react-native'
-import { useNavigation } from '@react-navigation/native'
-import Feather from '@expo/vector-icons/Feather' // Iconos
+
+import React, { useState } from 'react';
+import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import Feather from '@expo/vector-icons/Feather';
+import { auth, db } from '../FirebaseConf';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function PantallaDeInicio() {
-  // Guardan los valores de los inputs
-  const [email, setEmail] = useState('')  
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [puesto, setPuesto] = useState('');
+  const [tipoLogin, setTipoLogin] = useState('gerente'); // 'gerente' o 'empleado'
+  const [loading, setLoading] = useState(false);
 
-  //  Detectan si el usuario está escribiendo en el input
-  const [emailFocused, setEmailFocused] = useState(false)
-  const [passwordFocused, setPasswordFocused] = useState(false)
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [puestoFocused, setPuestoFocused] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const [passwordVisible, setPasswordVisible] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')  // Almacena mensajes de error de validación.
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
-  const handleLogin = () => {
+  const handleGerenteLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      setErrorMessage('Por favor, complete todos los campos.')
+      setErrorMessage('Por favor, complete todos los campos.');
       return;
     }
+
+    setLoading(true);
     setErrorMessage('');
-    navigation.navigate('P1Admin')
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Verificar si el usuario es gerente
+      const gerenteDoc = await getDoc(doc(db, 'gerentes', user.uid));
+      
+      if (!gerenteDoc.exists()) {
+        await auth.signOut();
+        throw new Error('No tienes permisos de gerente para acceder');
+      }
+
+      // La navegación se manejará automáticamente por el AuthContext
+      
+    } catch (error) {
+      console.error('Error en login de gerente:', error);
+      let mensaje = 'Error al iniciar sesión';
+      
+      if (error.code === 'auth/user-not-found') {
+        mensaje = 'Usuario no encontrado';
+      } else if (error.code === 'auth/wrong-password') {
+        mensaje = 'Contraseña incorrecta';
+      } else if (error.code === 'auth/invalid-email') {
+        mensaje = 'Correo electrónico inválido';
+      } else if (error.message) {
+        mensaje = error.message;
+      }
+      
+      setErrorMessage(mensaje);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEmpleadoLogin = async () => {
+    if (!email.trim() || !password.trim() || !puesto.trim()) {
+      setErrorMessage('Por favor, complete todos los campos.');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMessage('');
+
+    try {
+      // Primero verificar si el empleado está autorizado
+      const empleadoDoc = await getDoc(doc(db, 'empleados_autorizados', email));
+      
+      if (!empleadoDoc.exists()) {
+        throw new Error('Este correo no está autorizado para acceder como empleado');
+      }
+
+      const empleadoData = empleadoDoc.data();
+      
+      // Verificar que el puesto coincida
+      if (empleadoData.puesto !== puesto) {
+        throw new Error('El puesto ingresado no coincide con el registrado');
+      }
+
+      // Intentar iniciar sesión con Firebase Auth
+      await signInWithEmailAndPassword(auth, email, password);
+      
+      // La navegación se manejará automáticamente por el AuthContext
+      
+    } catch (error) {
+      console.error('Error en login de empleado:', error);
+      let mensaje = 'Error al iniciar sesión';
+      
+      if (error.code === 'auth/user-not-found') {
+        mensaje = 'Usuario no encontrado en el sistema';
+      } else if (error.code === 'auth/wrong-password') {
+        mensaje = 'Contraseña incorrecta';
+      } else if (error.code === 'auth/invalid-email') {
+        mensaje = 'Correo electrónico inválido';
+      } else if (error.message) {
+        mensaje = error.message;
+      }
+      
+      setErrorMessage(mensaje);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogin = () => {
+    if (tipoLogin === 'gerente') {
+      handleGerenteLogin();
+    } else {
+      handleEmpleadoLogin();
+    }
   };
 
   return (
@@ -33,9 +130,32 @@ export default function PantallaDeInicio() {
 
       <View style={styles.formContainer}>
         <View style={styles.errorMessage}>
-        {errorMessage ? (
-          <Text style={styles.errorText}>{errorMessage}</Text>
-        ) : null}
+          {errorMessage ? (
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          ) : null}
+        </View>
+
+        {/* Selector de tipo de login */}
+        <View style={styles.radioContainer}>
+          <TouchableOpacity 
+            style={styles.radioButton} 
+            onPress={() => setTipoLogin('gerente')}
+          >
+            <View style={[styles.radioCircle, tipoLogin === 'gerente' && styles.radioSelected]}>
+              {tipoLogin === 'gerente' && <View style={styles.radioInnerCircle}/>}
+            </View>
+            <Text style={styles.radioLabel}>Ingresar como Gerente</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.radioButton} 
+            onPress={() => setTipoLogin('empleado')}
+          >
+            <View style={[styles.radioCircle, tipoLogin === 'empleado' && styles.radioSelected]}>
+              {tipoLogin === 'empleado' && <View style={styles.radioInnerCircle}/>}
+            </View>
+            <Text style={styles.radioLabel}>Ingresar como Empleado</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Input de correo */}
@@ -46,14 +166,25 @@ export default function PantallaDeInicio() {
           onChangeText={setEmail}
           onFocus={() => setEmailFocused(true)}
           onBlur={() => setEmailFocused(false)}
+          autoCapitalize="none"
+          keyboardType="email-address"
         />
+
+        {/* Input de puesto (solo para empleados) */}
+        {tipoLogin === 'empleado' && (
+          <TextInput
+            style={[styles.input, puestoFocused && styles.inputFocused]}
+            placeholder="Puesto"
+            value={puesto}
+            onChangeText={setPuesto}
+            onFocus={() => setPuestoFocused(true)}
+            onBlur={() => setPuestoFocused(false)}
+          />
+        )}
        
         <View style={styles.passwordContainer}>
           <TextInput
-            style={[
-              styles.inputPassword,
-              passwordFocused && styles.inputFocused,
-            ]}
+            style={[styles.inputPassword, passwordFocused && styles.inputFocused]}
             placeholder="Contraseña"
             secureTextEntry={!passwordVisible}
             value={password}
@@ -62,8 +193,7 @@ export default function PantallaDeInicio() {
             onBlur={() => setPasswordFocused(false)}
           />
           
-          <TouchableOpacity
-            onPress={() => setPasswordVisible(!passwordVisible)}>
+          <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
             <Feather
               name={passwordVisible ? 'eye' : 'eye-off'}
               size={15}
@@ -74,7 +204,6 @@ export default function PantallaDeInicio() {
           </TouchableOpacity>
         </View>
 
-        
         <View style={styles.recoverContainer}>
           <Text style={styles.recoverText}>¿Olvidaste tu contraseña?</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Recuperar')}>
@@ -82,18 +211,26 @@ export default function PantallaDeInicio() {
           </TouchableOpacity>
         </View>
 
-       
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Iniciar Sesión</Text>
+        <TouchableOpacity 
+          style={styles.button} 
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Iniciar Sesión</Text>
+          )}
         </TouchableOpacity>
 
-      
-        <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>¿No tienes una cuenta?</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Registrar')}>
-            <Text style={styles.registerLink}> Regístrate</Text>
-          </TouchableOpacity>
-        </View>
+        {tipoLogin === 'gerente' && (
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>¿Primer gerente?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('RegistrarGerente')}>
+              <Text style={styles.registerLink}> Crear cuenta</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </ImageBackground>
   );
@@ -101,47 +238,39 @@ export default function PantallaDeInicio() {
 
 const styles = StyleSheet.create({
   container: {
-    //Contenedor principal
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f2f2f2',
   },
-
   logo: {
     width: 150, 
     height: 90,
     resizeMode: 'center',
     marginBottom: 10,
   },
-
   formContainer: {
-    //Contenedor del formulario
     width: '85%',
-    height: 450,
+    height: 550,
     padding: 20,
     backgroundColor: '#fff',
     borderRadius: 25,
     alignItems: 'center',
   },
-   //Campo de entrada para el correo electrónico
   input: { 
     width: '100%',
     padding: 10,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    marginTop: 30, // Más separación
+    marginTop: 15,
   },
-
   errorMessage: {
     marginTop: 5,
   },
-   // Estilo que se aplica cuando el campo de correo está enfocado
   inputFocused: {
     borderColor: '#FFA500',
   },
-   //Contenedor para el campo de entrada de contraseña y el ícono de mostrar/ocultar la contraseña.
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -150,37 +279,29 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     width: '100%',
-    marginTop: 20, // Más separación con el input de arriba
+    marginTop: 15,
   },
-   //Campo de entrada para la contraseña.
   inputPassword: {
     flex: 1, 
     padding: 10,
-    
   },
-
-
   recoverContainer: {
-    //Contenedor de, Olvidaste tu contraseña?
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 70,
+    marginBottom: 40,
     marginTop: 15,
     paddingLeft: 75,
   },
-
   recoverText: {
     fontSize: 11,
     color: '#000',
   },
-
   recoverLink: {
     fontSize: 11,
     color: '#007BFF',
     fontWeight: 'bold',
   },
-
   button: {
     width: '100%',
     backgroundColor: '#000',
@@ -189,18 +310,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 15,
   },
-
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
-
   registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
   },
-
   registerText: {
     fontSize: 14,
     color: '#000',
@@ -208,11 +326,41 @@ const styles = StyleSheet.create({
   registerLink: {
     color: '#007BFF',
   },
-
   errorText: {
     color: 'red',
     fontSize: 13,
     marginBottom: 10,
   },
-
-})
+  radioContainer: {
+    width: '100%',
+    marginTop: 10,
+    marginBottom: 15,
+  },
+  radioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  radioCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  radioSelected: {
+    borderColor: '#000',
+  },
+  radioInnerCircle: {
+    width: 8,
+    height: 8,
+    borderRadius: 5,
+    backgroundColor: '#000',
+  },
+  radioLabel: {
+    fontSize: 14,
+  },
+});

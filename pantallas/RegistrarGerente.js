@@ -1,0 +1,273 @@
+
+import React, { useState } from 'react';
+import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import Feather from '@expo/vector-icons/Feather';
+import { auth, db, serverTimestamp } from '../FirebaseConf';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+
+export default function RegistrarGerente() {
+  const [nombre, setNombre] = useState('');
+  const [apellido, setApellido] = useState('');
+  const [email, setEmail] = useState('');  
+  const [password, setPassword] = useState('');
+  const [confpassword, setConfPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const [nombreFocused, setNombreFocused] = useState(false);
+  const [apellidoFocused, setApellidoFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confpasswordFocused, setConfPasswordFocused] = useState(false);
+  const [confpasswordVisible, setConfPasswordVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const navigation = useNavigation();
+
+  const handleRegister = async () => {
+    if (!nombre.trim() || !apellido.trim() || !email.trim() || !password.trim() || !confpassword.trim()) {
+      setErrorMessage('Por favor, complete todos los campos.');
+      return;
+    }
+
+    if (password !== confpassword) {
+      setErrorMessage('Las contraseñas no coinciden.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMessage('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMessage('');
+
+    try {
+      // Crear usuario en Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Guardar datos del gerente en Firestore
+      await setDoc(doc(db, 'gerentes', user.uid), {
+        nombre,
+        apellido,
+        correo: email,
+        fechaRegistro: serverTimestamp(),
+        rol: 'gerente'
+      });
+
+      Alert.alert('Éxito', 'Cuenta de gerente creada correctamente');
+      
+    } catch (error) {
+      console.error('Error en registro de gerente:', error);
+      let mensaje = 'Error al crear cuenta';
+      
+      if (error.code === 'auth/email-already-in-use') {
+        mensaje = 'Este correo ya está registrado';
+      } else if (error.code === 'auth/invalid-email') {
+        mensaje = 'Correo electrónico inválido';
+      } else if (error.code === 'auth/weak-password') {
+        mensaje = 'La contraseña es muy débil';
+      }
+      
+      setErrorMessage(mensaje);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ImageBackground
+      source={require('../assets/Fondo1.png')}
+      style={styles.container}>
+      <Image source={require('../assets/Logo.png')} style={styles.logo} />
+
+      <View style={styles.formContainer}>
+        <Text style={styles.title}>Registro de Gerente</Text>
+        
+        <View style={styles.errorMessage}>
+          {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        </View>
+
+        <TextInput
+          style={[styles.input, nombreFocused && styles.inputFocused]}
+          placeholder="Nombre"
+          value={nombre}
+          onChangeText={setNombre}
+          onFocus={() => setNombreFocused(true)}
+          onBlur={() => setNombreFocused(false)}
+        />
+
+        <TextInput
+          style={[styles.input, apellidoFocused && styles.inputFocused]}
+          placeholder="Apellido"
+          value={apellido}
+          onChangeText={setApellido}
+          onFocus={() => setApellidoFocused(true)}
+          onBlur={() => setApellidoFocused(false)}
+        />
+
+        <TextInput
+          style={[styles.input, emailFocused && styles.inputFocused]}
+          placeholder="Correo electrónico"
+          value={email}
+          onChangeText={setEmail}
+          onFocus={() => setEmailFocused(true)}
+          onBlur={() => setEmailFocused(false)}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={[styles.inputPassword, passwordFocused && styles.inputFocused]}
+            placeholder="Contraseña"
+            secureTextEntry={!passwordVisible}
+            value={password}
+            onChangeText={setPassword}
+            onFocus={() => setPasswordFocused(true)}
+            onBlur={() => setPasswordFocused(false)}
+          />
+          
+          <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
+            <Feather
+              name={passwordVisible ? 'eye' : 'eye-off'}
+              size={15}
+              paddingHorizontal={10}
+              color="gray"
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={[styles.inputPassword, confpasswordFocused && styles.inputFocused]}
+            placeholder="Confirme su contraseña"
+            secureTextEntry={!confpasswordVisible}
+            value={confpassword}
+            onChangeText={setConfPassword}
+            onFocus={() => setConfPasswordFocused(true)}
+            onBlur={() => setConfPasswordFocused(false)}
+          />
+          
+          <TouchableOpacity onPress={() => setConfPasswordVisible(!confpasswordVisible)}>
+            <Feather
+              name={confpasswordVisible ? 'eye' : 'eye-off'}
+              size={15}
+              paddingHorizontal={10}
+              color="gray"
+            />
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity 
+          style={styles.button} 
+          onPress={handleRegister}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Crear Cuenta</Text>
+          )}
+        </TouchableOpacity>
+     
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>¿Ya tienes una cuenta?</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Inicio')}>
+            <Text style={styles.registerLink}> Inicia Sesión</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ImageBackground>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f2f2f2',
+  },
+  logo: {
+    width: 150, 
+    height: 90,
+    resizeMode: 'center',
+    marginBottom: 10,
+  },
+  formContainer: {
+    width: '85%',
+    height: 600,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 25,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  input: { 
+    width: '100%',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  errorMessage: {
+    marginTop: 5,
+  },
+  inputFocused: {
+    borderColor: '#FFA500',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    width: '100%',
+    marginTop: 10,
+  },
+  inputPassword: {
+    flex: 1, 
+    padding: 10,
+  },
+  button: {
+    width: '100%',
+    backgroundColor: '#000',
+    padding: 15,
+    borderRadius: 40,
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  registerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  registerText: {
+    fontSize: 14,
+    color: '#000',
+  },
+  registerLink: {
+    color: '#007BFF',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 13,
+    marginBottom: 10,
+  },
+});
