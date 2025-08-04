@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -60,11 +59,11 @@ export default function RegistrarGerente() {
       });
 
       Alert.alert('Éxito', 'Cuenta de gerente creada correctamente');
-      
+
     } catch (error) {
       console.error('Error en registro de gerente:', error);
       let mensaje = 'Error al crear cuenta';
-      
+
       if (error.code === 'auth/email-already-in-use') {
         mensaje = 'Este correo ya está registrado';
       } else if (error.code === 'auth/invalid-email') {
@@ -72,7 +71,7 @@ export default function RegistrarGerente() {
       } else if (error.code === 'auth/weak-password') {
         mensaje = 'La contraseña es muy débil';
       }
-      
+
       setErrorMessage(mensaje);
     } finally {
       setLoading(false);
@@ -95,7 +94,7 @@ export default function RegistrarGerente() {
 
       <View style={styles.formContainer}>
         <Text style={styles.title}>Registro de Gerente</Text>
-        
+
         <View style={styles.errorMessage}>
           {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
         </View>
@@ -139,7 +138,7 @@ export default function RegistrarGerente() {
             onFocus={() => setPasswordFocused(true)}
             onBlur={() => setPasswordFocused(false)}
           />
-          
+
           <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
             <Feather
               name={passwordVisible ? 'eye' : 'eye-off'}
@@ -160,7 +159,7 @@ export default function RegistrarGerente() {
             onFocus={() => setConfPasswordFocused(true)}
             onBlur={() => setConfPasswordFocused(false)}
           />
-          
+
           <TouchableOpacity onPress={() => setConfPasswordVisible(!confpasswordVisible)}>
             <Feather
               name={confpasswordVisible ? 'eye' : 'eye-off'}
@@ -182,7 +181,7 @@ export default function RegistrarGerente() {
             <Text style={styles.buttonText}>Crear Cuenta</Text>
           )}
         </TouchableOpacity>
-     
+
         <View style={styles.registerContainer}>
           <Text style={styles.registerText}>¿Ya tienes una cuenta?</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Inicio')}>

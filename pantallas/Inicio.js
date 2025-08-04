@@ -231,6 +231,31 @@ export default function PantallaDeInicio() {
           )}
         </TouchableOpacity>
 
+        {/* BOTONES DE PRUEBA TEMPORALES */}
+        <View style={styles.testButtonsContainer}>
+          <Text style={styles.testTitle}>🧪 MODO PRUEBA (SIN AUTENTICACIÓN)</Text>
+          
+          <TouchableOpacity 
+            style={[styles.button, styles.testButton, styles.testButtonGerente]} 
+            onPress={() => {
+              // Simular login como gerente
+              navigation.navigate('P1Admin');
+            }}
+          >
+            <Text style={styles.buttonText}>🔧 ENTRAR COMO GERENTE (PRUEBA)</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.button, styles.testButton, styles.testButtonEmpleado]} 
+            onPress={() => {
+              // Simular login como empleado
+              navigation.navigate('P1Admin');
+            }}
+          >
+            <Text style={styles.buttonText}>👤 ENTRAR COMO EMPLEADO (PRUEBA)</Text>
+          </TouchableOpacity>
+        </View>
+
         {tipoLogin === 'gerente' && (
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>¿Primer gerente?</Text>
@@ -261,7 +286,7 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: '85%',
-    height: 550,
+    minHeight: 650,
     padding: 20,
     backgroundColor: '#fff',
     borderRadius: 25,
@@ -372,5 +397,31 @@ const styles = StyleSheet.create({
   },
   radioLabel: {
     fontSize: 14,
+  },
+  testButtonsContainer: {
+    width: '100%',
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#e9ecef',
+    borderStyle: 'dashed',
+  },
+  testTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#6c757d',
+    marginBottom: 10,
+  },
+  testButton: {
+    marginVertical: 5,
+  },
+  testButtonGerente: {
+    backgroundColor: '#28a745',
+  },
+  testButtonEmpleado: {
+    backgroundColor: '#007bff',
   },
 });
