@@ -3,9 +3,7 @@ import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpa
 import { useNavigation } from '@react-navigation/native';
 import Feather from '@expo/vector-icons/Feather';
 import { Picker } from '@react-native-picker/picker';
-import { auth, db, serverTimestamp } from '../FirebaseConf';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
+import registrationService from '../services/registrationService';
 
 export default function PantallaDeInicio() {
   const [nombre, setNombre] = useState('');
@@ -50,43 +48,24 @@ export default function PantallaDeInicio() {
     setErrorMessage('');
 
     try {
-      // 1. Verificar si el correo está autorizado
-      const q = query(collection(db, 'emailsAutorizados'), where('email', '==', email));
-      const querySnapshot = await getDocs(q);
+      const result = await registrationService.registerUsuario(
+        nombre, 
+        apellido, 
+        numeroDocumento, 
+        email, 
+        password, 
+        tipoUsuario
+      );
       
-      if (querySnapshot.empty) {
-        throw new Error('Este correo no está autorizado para registrarse');
+      if (result.success) {
+        Alert.alert('Éxito', result.message);
+        navigation.navigate(result.role === 'admin' ? 'P1Admin' : 'Principal');
+      } else {
+        setErrorMessage(result.error);
       }
-
-      const userData = querySnapshot.docs[0].data();
-      const rolAutorizado = userData.rol;
-
-      // 2. Validar rol admin
-      if (tipoUsuario === 'admin' && rolAutorizado !== 'admin') {
-        throw new Error('No tienes permiso para registrarte como administrador.');
-      }
-
-      // 3. Crear usuario en Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // 4. Guardar datos en Firestore
-      await setDoc(doc(db, 'usuarios', user.uid), {
-        nombre,
-        apellido,  
-        tipoDocumento,
-        numeroDocumento,
-        email,
-        tipoUsuario: rolAutorizado, // Usamos el rol autorizado
-        fechaRegistro: serverTimestamp(),
-      });
-
-      Alert.alert('Éxito', 'Usuario registrado correctamente');
-      navigation.navigate(rolAutorizado === 'admin' ? 'P1Admin' : 'Principal');
-      
     } catch (error) {
       console.error('Error en registro:', error);
-      setErrorMessage(error.message.replace('Firebase: ', ''));
+      setErrorMessage('Error al registrar usuario');
     } finally {
       setLoading(false);
     }

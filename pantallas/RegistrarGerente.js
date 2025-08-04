@@ -3,9 +3,7 @@ import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Feather from '@expo/vector-icons/Feather';
-import { auth, db, serverTimestamp } from '../FirebaseConf';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import registrationService from '../services/registrationService';
 
 export default function RegistrarGerente() {
   const [nombre, setNombre] = useState('');
@@ -46,34 +44,17 @@ export default function RegistrarGerente() {
     setErrorMessage('');
 
     try {
-      // Crear usuario en Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Guardar datos del gerente en Firestore
-      await setDoc(doc(db, 'gerentes', user.uid), {
-        nombre,
-        apellido,
-        correo: email,
-        fechaRegistro: serverTimestamp(),
-        rol: 'gerente'
-      });
-
-      Alert.alert('Éxito', 'Cuenta de gerente creada correctamente');
+      const result = await registrationService.registerGerente(nombre, apellido, email, password);
       
+      if (result.success) {
+        Alert.alert('Éxito', result.message);
+        // La navegación se manejará automáticamente por el AuthContext
+      } else {
+        setErrorMessage(result.error);
+      }
     } catch (error) {
       console.error('Error en registro de gerente:', error);
-      let mensaje = 'Error al crear cuenta';
-      
-      if (error.code === 'auth/email-already-in-use') {
-        mensaje = 'Este correo ya está registrado';
-      } else if (error.code === 'auth/invalid-email') {
-        mensaje = 'Correo electrónico inválido';
-      } else if (error.code === 'auth/weak-password') {
-        mensaje = 'La contraseña es muy débil';
-      }
-      
-      setErrorMessage(mensaje);
+      setErrorMessage('Error al crear cuenta');
     } finally {
       setLoading(false);
     }

@@ -3,9 +3,7 @@ import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Feather from '@expo/vector-icons/Feather';
-import { auth, db } from '../FirebaseConf';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import authService from '../services/authService';
 
 export default function PantallaDeInicio() {
   const [email, setEmail] = useState('');
@@ -32,34 +30,17 @@ export default function PantallaDeInicio() {
     setErrorMessage('');
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Verificar si el usuario es gerente
-      const gerenteDoc = await getDoc(doc(db, 'gerentes', user.uid));
+      const result = await authService.loginGerente(email, password);
       
-      if (!gerenteDoc.exists()) {
-        await auth.signOut();
-        throw new Error('No tienes permisos de gerente para acceder');
+      if (result.success) {
+        // La navegación se manejará automáticamente por el AuthContext
+        console.log('Login de gerente exitoso');
+      } else {
+        setErrorMessage(result.error);
       }
-
-      // La navegación se manejará automáticamente por el AuthContext
-      
     } catch (error) {
       console.error('Error en login de gerente:', error);
-      let mensaje = 'Error al iniciar sesión';
-      
-      if (error.code === 'auth/user-not-found') {
-        mensaje = 'Usuario no encontrado';
-      } else if (error.code === 'auth/wrong-password') {
-        mensaje = 'Contraseña incorrecta';
-      } else if (error.code === 'auth/invalid-email') {
-        mensaje = 'Correo electrónico inválido';
-      } else if (error.message) {
-        mensaje = error.message;
-      }
-      
-      setErrorMessage(mensaje);
+      setErrorMessage('Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
@@ -75,40 +56,17 @@ export default function PantallaDeInicio() {
     setErrorMessage('');
 
     try {
-      // Primero verificar si el empleado está autorizado
-      const empleadoDoc = await getDoc(doc(db, 'empleados_autorizados', email));
+      const result = await authService.loginEmpleado(email, password, puesto);
       
-      if (!empleadoDoc.exists()) {
-        throw new Error('Este correo no está autorizado para acceder como empleado');
+      if (result.success) {
+        // La navegación se manejará automáticamente por el AuthContext
+        console.log('Login de empleado exitoso');
+      } else {
+        setErrorMessage(result.error);
       }
-
-      const empleadoData = empleadoDoc.data();
-      
-      // Verificar que el puesto coincida
-      if (empleadoData.puesto !== puesto) {
-        throw new Error('El puesto ingresado no coincide con el registrado');
-      }
-
-      // Intentar iniciar sesión con Firebase Auth
-      await signInWithEmailAndPassword(auth, email, password);
-      
-      // La navegación se manejará automáticamente por el AuthContext
-      
     } catch (error) {
       console.error('Error en login de empleado:', error);
-      let mensaje = 'Error al iniciar sesión';
-      
-      if (error.code === 'auth/user-not-found') {
-        mensaje = 'Usuario no encontrado en el sistema';
-      } else if (error.code === 'auth/wrong-password') {
-        mensaje = 'Contraseña incorrecta';
-      } else if (error.code === 'auth/invalid-email') {
-        mensaje = 'Correo electrónico inválido';
-      } else if (error.message) {
-        mensaje = error.message;
-      }
-      
-      setErrorMessage(mensaje);
+      setErrorMessage('Error al iniciar sesión');
     } finally {
       setLoading(false);
     }

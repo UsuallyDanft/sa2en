@@ -1,8 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db } from '../FirebaseConf';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import authService from '../services/authService';
 
 const AuthContext = createContext({});
 
@@ -22,60 +20,13 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = authService.onAuthStateChange((authData) => {
       setLoading(true);
       
-      if (firebaseUser) {
-        try {
-          // Primero verificar si es gerente
-          const gerenteDoc = await getDoc(doc(db, 'gerentes', firebaseUser.uid));
-          
-          if (gerenteDoc.exists()) {
-            const gerenteData = gerenteDoc.data();
-            setUser(firebaseUser);
-            setUserRole('gerente');
-            setUserProfile({
-              ...gerenteData,
-              uid: firebaseUser.uid,
-              email: firebaseUser.email
-            });
-            setIsAuthenticated(true);
-          } else {
-            // Si no es gerente, verificar si es empleado
-            const empleadoDoc = await getDoc(doc(db, 'empleados_autorizados', firebaseUser.email));
-            
-            if (empleadoDoc.exists()) {
-              const empleadoData = empleadoDoc.data();
-              setUser(firebaseUser);
-              setUserRole('empleado');
-              setUserProfile({
-                ...empleadoData,
-                uid: firebaseUser.uid,
-                email: firebaseUser.email
-              });
-              setIsAuthenticated(true);
-            } else {
-              // Usuario no autorizado
-              await signOut(auth);
-              setUser(null);
-              setUserRole(null);
-              setUserProfile(null);
-              setIsAuthenticated(false);
-            }
-          }
-        } catch (error) {
-          console.error('Error al obtener datos del usuario:', error);
-          setUser(null);
-          setUserRole(null);
-          setUserProfile(null);
-          setIsAuthenticated(false);
-        }
-      } else {
-        setUser(null);
-        setUserRole(null);
-        setUserProfile(null);
-        setIsAuthenticated(false);
-      }
+      setUser(authData.user);
+      setUserRole(authData.role);
+      setUserProfile(authData.profile);
+      setIsAuthenticated(authData.isAuthenticated);
       
       setLoading(false);
     });
@@ -85,11 +36,15 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await signOut(auth);
-      setUser(null);
-      setUserRole(null);
-      setUserProfile(null);
-      setIsAuthenticated(false);
+      const result = await authService.logout();
+      if (result.success) {
+        setUser(null);
+        setUserRole(null);
+        setUserProfile(null);
+        setIsAuthenticated(false);
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
       throw error;
