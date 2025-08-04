@@ -1,15 +1,9 @@
 
 // Importa las funciones necesarias de los SDKs de Firebase que uses
 import { initializeApp } from 'firebase/app';
-import {
-  initializeAuth,
-  getAuth,
-  getReactNativePersistence, // Para nativo
-  browserLocalPersistence   // Para la web
-} from 'firebase/auth';
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { getAuth } from 'firebase/auth';
 import { getFirestore, serverTimestamp } from 'firebase/firestore';
-import { Platform } from 'react-native'; // Importante para detectar la plataforma
+import { Platform } from 'react-native';
 
 // Configuración de Firebase
 const FirebaseConf = {
@@ -42,16 +36,8 @@ try {
   // Inicializar Firebase 
   app = initializeApp(FirebaseConf);
   
-  // Inicializar Firebase Auth
-  if (Platform.OS === 'web') {
-    // Para web, usar getAuth directamente
-    auth = getAuth(app);
-  } else {
-    // Para móvil, usar initializeAuth con persistencia
-    auth = initializeAuth(app, {
-      persistence: getReactNativePersistence(ReactNativeAsyncStorage)
-    });
-  }
+  // Inicializar Firebase Auth (simplificado para web)
+  auth = getAuth(app);
   
   // Inicializar Firestore
   db = getFirestore(app);
