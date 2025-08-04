@@ -1,4 +1,3 @@
-
 // Importa las funciones necesarias de los SDKs de Firebase que uses
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
@@ -19,7 +18,7 @@ const FirebaseConf = {
 const validateConfig = (config) => {
   const requiredFields = ['apiKey', 'authDomain', 'projectId', 'appId'];
   const missingFields = requiredFields.filter(field => !config[field]);
-  
+
   if (missingFields.length > 0) {
     throw new Error(`Faltan campos de configuración de Firebase: ${missingFields.join(', ')}`);
   }
@@ -32,18 +31,28 @@ let db;
 try {
   // Validar configuración antes de inicializar
   validateConfig(FirebaseConf);
-  
+
   // Inicializar Firebase 
   app = initializeApp(FirebaseConf);
-  
-  // Inicializar Firebase Auth (simplificado para web)
+
+  // Inicializar Firebase Auth
   auth = getAuth(app);
-  
+
+  // Configuración adaptativa para diferentes entornos
+  if (Platform.OS === 'web') {
+    console.log('🌐 Ejecutando en entorno web');
+    if (typeof window !== 'undefined' && window.location.hostname.includes('replit')) {
+      console.log('🔧 Configuración específica para Replit web');
+    }
+  } else {
+    console.log('📱 Ejecutando en entorno móvil:', Platform.OS);
+  }
+
   // Inicializar Firestore
   db = getFirestore(app);
-  
-  console.log('✅ Firebase configurado correctamente');
-  
+
+  console.log('✅ Firebase configurado correctamente para:', Platform.OS);
+
 } catch (error) {
   console.error('❌ Error al configurar Firebase:', error.message);
   throw error;
