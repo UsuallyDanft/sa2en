@@ -22,10 +22,13 @@ const Stack = createStackNavigator();
 
 function AuthStack() {
   return (
-    <Stack.Navigator initialRouteName="Inicio">
-      <Stack.Screen name="Inicio" component={Inicio} options={{ headerShown: false }} />
-      <Stack.Screen name="Recuperar" component={Recuperar} options={{ headerShown: false }} />
-      <Stack.Screen name="RegistrarGerente" component={RegistrarGerente} options={{ headerShown: false }} />
+    <Stack.Navigator 
+      initialRouteName="Inicio"
+      screenOptions={{ headerShown: false }}
+    >
+      <Stack.Screen name="Inicio" component={Inicio} />
+      <Stack.Screen name="Recuperar" component={Recuperar} />
+      <Stack.Screen name="RegistrarGerente" component={RegistrarGerente} />
     </Stack.Navigator>
   );
 }
@@ -34,19 +37,22 @@ function MainStack() {
   const { userRole } = useAuth();
   
   return (
-    <Stack.Navigator initialRouteName="P1Admin">
-      <Stack.Screen name="P1Admin" component={P1Admin} options={{ headerShown: false }} />
-      <Stack.Screen name="Principal" component={Principal} options={{ headerShown: false }} />
-      <Stack.Screen name="Registro" component={Registro} options={{ headerShown: false }} />
-      <Stack.Screen name="Equipo" component={Equipo} options={{ headerShown: false }} />
-      <Stack.Screen name="Cajachica" component={Cajachica} options={{ headerShown: false }} />
-      <Stack.Screen name="Movimientos" component={Movimientos} options={{ headerShown: false }} />
-      <Stack.Screen name="NewM" component={NewM} options={{ headerShown: false }} />
-      <Stack.Screen name="Menu" component={Menu} options={{ headerShown: false }} />
+    <Stack.Navigator 
+      initialRouteName="Principal"
+      screenOptions={{ headerShown: false }}
+    >
+      <Stack.Screen name="Principal" component={Principal} />
+      <Stack.Screen name="P1Admin" component={P1Admin} />
+      <Stack.Screen name="Registro" component={Registro} />
+      <Stack.Screen name="Equipo" component={Equipo} />
+      <Stack.Screen name="Cajachica" component={Cajachica} />
+      <Stack.Screen name="Movimientos" component={Movimientos} />
+      <Stack.Screen name="NewM" component={NewM} />
+      <Stack.Screen name="Menu" component={Menu} />
       
       {/* Pantalla solo para gerentes */}
       {userRole === 'gerente' && (
-        <Stack.Screen name="Configuracion" component={Configuracion} options={{ headerShown: false }} />
+        <Stack.Screen name="Configuracion" component={Configuracion} />
       )}
     </Stack.Navigator>
   );
@@ -54,10 +60,10 @@ function MainStack() {
 
 function LoadingScreen() {
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' }}>
       <ActivityIndicator size="large" color="#007BFF" />
       <Text style={{ marginTop: 20, fontSize: 16, color: '#666' }}>
-        Cargando...
+        Cargando aplicación...
       </Text>
     </View>
   );

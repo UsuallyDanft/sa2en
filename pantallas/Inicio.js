@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -37,18 +36,18 @@ export default function PantallaDeInicio() {
 
       // Verificar si el usuario es gerente
       const gerenteDoc = await getDoc(doc(db, 'gerentes', user.uid));
-      
+
       if (!gerenteDoc.exists()) {
         await auth.signOut();
         throw new Error('No tienes permisos de gerente para acceder');
       }
 
       // La navegación se manejará automáticamente por el AuthContext
-      
+
     } catch (error) {
       console.error('Error en login de gerente:', error);
       let mensaje = 'Error al iniciar sesión';
-      
+
       if (error.code === 'auth/user-not-found') {
         mensaje = 'Usuario no encontrado';
       } else if (error.code === 'auth/wrong-password') {
@@ -58,7 +57,7 @@ export default function PantallaDeInicio() {
       } else if (error.message) {
         mensaje = error.message;
       }
-      
+
       setErrorMessage(mensaje);
     } finally {
       setLoading(false);
@@ -77,13 +76,13 @@ export default function PantallaDeInicio() {
     try {
       // Primero verificar si el empleado está autorizado
       const empleadoDoc = await getDoc(doc(db, 'empleados_autorizados', email));
-      
+
       if (!empleadoDoc.exists()) {
         throw new Error('Este correo no está autorizado para acceder como empleado');
       }
 
       const empleadoData = empleadoDoc.data();
-      
+
       // Verificar que el puesto coincida
       if (empleadoData.puesto !== puesto) {
         throw new Error('El puesto ingresado no coincide con el registrado');
@@ -91,13 +90,13 @@ export default function PantallaDeInicio() {
 
       // Intentar iniciar sesión con Firebase Auth
       await signInWithEmailAndPassword(auth, email, password);
-      
+
       // La navegación se manejará automáticamente por el AuthContext
-      
+
     } catch (error) {
       console.error('Error en login de empleado:', error);
       let mensaje = 'Error al iniciar sesión';
-      
+
       if (error.code === 'auth/user-not-found') {
         mensaje = 'Usuario no encontrado en el sistema';
       } else if (error.code === 'auth/wrong-password') {
@@ -107,7 +106,7 @@ export default function PantallaDeInicio() {
       } else if (error.message) {
         mensaje = error.message;
       }
-      
+
       setErrorMessage(mensaje);
     } finally {
       setLoading(false);
@@ -122,14 +121,34 @@ export default function PantallaDeInicio() {
     }
   };
 
+  // Funciones para los botones de prueba
+  const handleTestGerenteLogin = () => {
+    // Simular login como gerente - navegar a Principal
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Principal' }],
+    });
+  };
+
+  const handleTestEmpleadoLogin = () => {
+    // Simular login como empleado - navegar a Principal
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Principal' }],
+    });
+  };
+
   return (
     <KeyboardAvoidingView 
       style={{ flex: 1 }} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       <ScrollView 
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
       >
         <ImageBackground
           source={require('../assets/Fondo1.png')}
@@ -154,7 +173,7 @@ export default function PantallaDeInicio() {
             </View>
             <Text style={styles.radioLabel}>Ingresar como Gerente</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity 
             style={styles.radioButton} 
             onPress={() => setTipoLogin('empleado')}
@@ -189,7 +208,7 @@ export default function PantallaDeInicio() {
             onBlur={() => setPuestoFocused(false)}
           />
         )}
-       
+
         <View style={styles.passwordContainer}>
           <TextInput
             style={[styles.inputPassword, passwordFocused && styles.inputFocused]}
@@ -200,7 +219,7 @@ export default function PantallaDeInicio() {
             onFocus={() => setPasswordFocused(true)}
             onBlur={() => setPasswordFocused(false)}
           />
-          
+
           <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
             <Feather
               name={passwordVisible ? 'eye' : 'eye-off'}
@@ -219,8 +238,9 @@ export default function PantallaDeInicio() {
           </TouchableOpacity>
         </View>
 
+        {/* Botón de Login */}
         <TouchableOpacity 
-          style={styles.button} 
+          style={[styles.button, loading && { opacity: 0.7 }]} 
           onPress={handleLogin}
           disabled={loading}
         >
@@ -231,34 +251,22 @@ export default function PantallaDeInicio() {
           )}
         </TouchableOpacity>
 
-        {/* BOTONES DE PRUEBA TEMPORALES */}
+        {/* Botones de prueba temporales */}
         <View style={styles.testButtonsContainer}>
-          <Text style={styles.testTitle}>🧪 MODO PRUEBA (SIN AUTENTICACIÓN)</Text>
-          
+          <Text style={styles.testTitle}>🧪 Botones de Prueba:</Text>
+
           <TouchableOpacity 
             style={[styles.button, styles.testButton, styles.testButtonGerente]} 
-            onPress={() => {
-              // Simular login como gerente - navegar a Principal
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Principal' }],
-              });
-            }}
+            onPress={handleTestGerenteLogin}
           >
-            <Text style={styles.buttonText}>🔧 ENTRAR COMO GERENTE (PRUEBA)</Text>
+            <Text style={styles.buttonText}>🔑 Login Gerente (Test)</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
             style={[styles.button, styles.testButton, styles.testButtonEmpleado]} 
-            onPress={() => {
-              // Simular login como empleado - navegar a Principal
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Principal' }],
-              });
-            }}
+            onPress={handleTestEmpleadoLogin}
           >
-            <Text style={styles.buttonText}>👤 ENTRAR COMO EMPLEADO (PRUEBA)</Text>
+            <Text style={styles.buttonText}>👤 Login Empleado (Test)</Text>
           </TouchableOpacity>
         </View>
 
@@ -365,11 +373,14 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   registerLink: {
+    fontSize: 14,
     color: '#007BFF',
+    fontWeight: 'bold',
   },
   errorText: {
-    color: 'red',
-    fontSize: 13,
+    color: '#dc3545',
+    fontSize: 14,
+    textAlign: 'center',
     marginBottom: 10,
   },
   radioContainer: {
@@ -407,22 +418,19 @@ const styles = StyleSheet.create({
   testButtonsContainer: {
     width: '100%',
     marginTop: 20,
-    padding: 15,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#e9ecef',
-    borderStyle: 'dashed',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
   testTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#666',
     textAlign: 'center',
-    color: '#6c757d',
-    marginBottom: 10,
+    marginBottom: 15,
+    fontWeight: '600',
   },
   testButton: {
-    marginVertical: 5,
+    marginVertical: 8,
   },
   testButtonGerente: {
     backgroundColor: '#28a745',
