@@ -1,80 +1,166 @@
-import { View, Text, ImageBackground, Image, TouchableOpacity, StyleSheet } from 'react-native'
 
-
-// Importación de las pantallas de navegación
-import {useNavigation} from '@react-navigation/native'
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../contexts/AuthContext';
+import Feather from '@expo/vector-icons/Feather';
 
 export default function Principal() {
-  // Se accede a la navegación para poder navegar a la pantalla de Registrar
-  const navigation = useNavigation()
+  const navigation = useNavigation();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigation.navigate('Inicio');
+  };
+
+  const menuItems = [
+    {
+      title: 'Caja Chica',
+      subtitle: 'Gestionar fondos y gastos menores',
+      icon: 'dollar-sign',
+      color: '#4CAF50',
+      onPress: () => navigation.navigate('Cajachica')
+    },
+    {
+      title: 'Movimientos',
+      subtitle: 'Ver historial de transacciones',
+      icon: 'activity',
+      color: '#2196F3',
+      onPress: () => navigation.navigate('Movimientos')
+    },
+    {
+      title: 'Registros',
+      subtitle: 'Crear nuevos registros de obra',
+      icon: 'file-plus',
+      color: '#FF9800',
+      onPress: () => navigation.navigate('Registro')
+    },
+    {
+      title: 'Equipo',
+      subtitle: 'Gestionar miembros del equipo',
+      icon: 'users',
+      color: '#9C27B0',
+      onPress: () => navigation.navigate('Equipo')
+    },
+    {
+      title: 'Configuración',
+      subtitle: 'Ajustes de la aplicación',
+      icon: 'settings',
+      color: '#607D8B',
+      onPress: () => navigation.navigate('Configuracion')
+    }
+  ];
 
   return (
-    <ImageBackground 
-      source={require('../assets/Fondo1.png')} // La imagen de fondo en la carpeta assets
-      style={styles.container} // Estilos para la pantalla
-    >
-         /* Logo */
-      <Image 
-        source={require('../assets/Logo.png')} 
-        style={styles.logo} // Para dar estilos al logo
-      />
+    <ImageBackground
+      source={require('../assets/Fondo1.png')}
+      style={styles.container}>
+      
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Image source={require('../assets/Logo.png')} style={styles.logo} />
+          <View style={styles.userInfo}>
+            <Text style={styles.welcomeText}>Bienvenido</Text>
+            <Text style={styles.userEmail}>{user?.email}</Text>
+          </View>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Feather name="log-out" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
 
-      /* Botón para Iniciar sesión */
-      <TouchableOpacity style={styles.button}
-      onPress={() => navigation.navigate('Inicio')} >
-      <Text style={styles.buttonText}>Iniciar sesión</Text>
-      </TouchableOpacity>
-
-      /* Texto con enlace a la pantalla de Registrar */
-      <View style={styles.registerTextContainer}>
-        <Text style={styles.text}>¿No tienes una cuenta? </Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Registrar')}>
-          <Text style={styles.registerLink}>Regístrate</Text> 
-        </TouchableOpacity>
-      </View>
+        {/* Menu Grid */}
+        <View style={styles.menuContainer}>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.menuItem, { backgroundColor: item.color }]}
+              onPress={item.onPress}
+            >
+              <Feather name={item.icon} size={40} color="#fff" />
+              <Text style={styles.menuTitle}>{item.title}</Text>
+              <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
     </ImageBackground>
-  )
+  );
 }
 
-/*Estilos de la pantalla*/
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#f2f2f2',
+  },
+  scrollContainer: {
+    flexGrow: 1,
     padding: 20,
   },
-  logo: {
-    width: 190, // Tamaño más pequeño
-    height: 100,
-    resizeMode: 'center',
-    marginBottom: 350,
-  },
-
-
-  button: {
-    backgroundColor: 'rgba(166, 200, 252, 0.21)', // Color de fondo con opacidad (HEX A6C8FC y 21% de  transparencia)
-    paddingVertical: 12,
-    paddingHorizontal: 70,
-    borderRadius: 30,
-    marginBottom: 20, // Separación entre el botón y el texto
-  },
-  buttonText: {
-    color: '#FFFFFF', // Color de texto del botón (blanco)
-    fontSize: 16,
-    fontWeight: 'bold',
-    
-  },
-  registerTextContainer: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    padding: 15,
+    borderRadius: 15,
+    marginBottom: 30,
   },
-  text: {
-    color: '#FFFFFF', // Color blanco para el texto
+  logo: {
+    width: 60,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  userInfo: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  welcomeText: {
     fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
   },
-  registerLink: {
-    color: '#FF7E22', // Color para el texto del enlace (HEX 0622AC)
+  userEmail: {
+    fontSize: 14,
+    color: '#666',
+  },
+  logoutButton: {
+    backgroundColor: '#f44336',
+    padding: 10,
+    borderRadius: 8,
+  },
+  menuContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  menuItem: {
+    width: '48%',
+    aspectRatio: 1,
+    marginBottom: 15,
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  menuTitle: {
+    color: '#fff',
     fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 10,
+    textAlign: 'center',
   },
-})
+  menuSubtitle: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 5,
+    textAlign: 'center',
+    opacity: 0.9,
+  },
+});
