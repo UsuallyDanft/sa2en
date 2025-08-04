@@ -16,7 +16,7 @@ const FirebaseConf = {
   apiKey: "AIzaSyCt9L4LzFJK2icufGt0HYiuGwhgKxhM7v0",
   authDomain: "sa2en-app.firebaseapp.com",
   projectId: "sa2en-app",
-  storageBucket: "sa2en-app.firebasestorage.app", // URL corregida
+  storageBucket: "sa2en-app.appspot.com",
   messagingSenderId: "493790722792",
   appId: "1:493790722792:android:c1f0badd73bbad9d25a75d"
 };
@@ -45,7 +45,6 @@ try {
   // Inicializar Firebase Auth
   if (Platform.OS === 'web') {
     // Para web, usar getAuth directamente
-    const { getAuth } = require('firebase/auth');
     auth = getAuth(app);
   } else {
     // Para móvil, usar initializeAuth con persistencia
