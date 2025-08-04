@@ -3,6 +3,7 @@
 import { initializeApp } from 'firebase/app';
 import {
   initializeAuth,
+  getAuth,
   getReactNativePersistence, // Para nativo
   browserLocalPersistence   // Para la web
 } from 'firebase/auth';
@@ -41,12 +42,17 @@ try {
   // Inicializar Firebase 
   app = initializeApp(FirebaseConf);
   
-  // Inicializa Firebase Auth con persistencia condicional
-  auth = initializeAuth(app, {
-    persistence: Platform.OS === 'web'
-      ? browserLocalPersistence // Usa esta si estás en la web
-      : getReactNativePersistence(ReactNativeAsyncStorage) // Usa esta para iOS/Android
-  });
+  // Inicializar Firebase Auth
+  if (Platform.OS === 'web') {
+    // Para web, usar getAuth directamente
+    const { getAuth } = require('firebase/auth');
+    auth = getAuth(app);
+  } else {
+    // Para móvil, usar initializeAuth con persistencia
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+    });
+  }
   
   // Inicializar Firestore
   db = getFirestore(app);
