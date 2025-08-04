@@ -238,8 +238,11 @@ export default function PantallaDeInicio() {
           <TouchableOpacity 
             style={[styles.button, styles.testButton, styles.testButtonGerente]} 
             onPress={() => {
-              // Simular login como gerente
-              navigation.navigate('P1Admin');
+              // Simular login como gerente - navegar a Principal
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Principal' }],
+              });
             }}
           >
             <Text style={styles.buttonText}>🔧 ENTRAR COMO GERENTE (PRUEBA)</Text>
@@ -248,8 +251,11 @@ export default function PantallaDeInicio() {
           <TouchableOpacity 
             style={[styles.button, styles.testButton, styles.testButtonEmpleado]} 
             onPress={() => {
-              // Simular login como empleado
-              navigation.navigate('P1Admin');
+              // Simular login como empleado - navegar a Principal
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Principal' }],
+              });
             }}
           >
             <Text style={styles.buttonText}>👤 ENTRAR COMO EMPLEADO (PRUEBA)</Text>
