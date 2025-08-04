@@ -1,0 +1,14 @@
+Firebase configurado para WEB con persistencia browserLocal
+✅ Firebase configurado correctamente
+"shadow*" style props are deprecated. Use "boxShadow".
+Platform is not defined
+at https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:53774:10
+at loadModuleImplementation (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:263:7)
+at guardedLoadModule (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:169:14)
+at metroRequire (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:89:75)
+at https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:32943:43
+at loadModuleImplementation (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:263:7)
+at guardedLoadModule (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:169:14)
+at metroRequire (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:89:75)
+at https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:22794:49
+at loadModuleImplementation (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:263:7)
