@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, TextInput, StyleSheet, Text, TouchableOpacity, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { db } from '../FirebaseConf';
 import { auth } from '../FirebaseConf';
@@ -53,8 +53,15 @@ export default function CrearEquipo() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Crear Nuevo Miembro</Text>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.title}>Crear Nuevo Miembro</Text>
 
       <TextInput
         style={styles.input}
@@ -94,7 +101,8 @@ export default function CrearEquipo() {
           {loading ? 'Procesando...' : 'Autorizar Usuario'}
         </Text>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

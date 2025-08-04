@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Switch } from 'react-native'
+import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Switch, KeyboardAvoidingView, ScrollView, Platform } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import Feather from '@expo/vector-icons/Feather'
 import { Picker } from '@react-native-picker/picker'
@@ -29,12 +29,20 @@ export default function PantallaDeRegistros() {
   }
 
   return (
-    <ImageBackground
-      source={require('../assets/Fondo1.png')}
-      style={styles.container}>
-      <Image source={require('../assets/Logo.png')} style={styles.logo} />
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <ImageBackground
+          source={require('../assets/Fondo1.png')}
+          style={styles.container}>
+          <Image source={require('../assets/Logo.png')} style={styles.logo} />
 
-      <View style={styles.formContainer}>
+          <View style={styles.formContainer}>
         <View style={styles.errorMessage}>
           {errorMessage ? (
             <Text style={styles.errorText}>{errorMessage}</Text>
@@ -121,8 +129,10 @@ export default function PantallaDeRegistros() {
         <TouchableOpacity style={styles.button} onPress={registroNuevo}>
           <Text style={styles.buttonText}>Guardar Registro</Text>
         </TouchableOpacity>
-      </View>
-    </ImageBackground>
+          </View>
+        </ImageBackground>
+      </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
 

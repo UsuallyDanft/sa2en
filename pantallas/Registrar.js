@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Feather from '@expo/vector-icons/Feather';
 import { Picker } from '@react-native-picker/picker';
@@ -72,12 +72,20 @@ export default function PantallaDeInicio() {
   };
 
   return (
-    <ImageBackground
-      source={require('../assets/Fondo1.png')}
-      style={styles.container}>
-      <Image source={require('../assets/Logo.png')} style={styles.logo} />
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <ImageBackground
+          source={require('../assets/Fondo1.png')}
+          style={styles.container}>
+          <Image source={require('../assets/Logo.png')} style={styles.logo} />
 
-      <View style={styles.formContainer}>
+          <View style={styles.formContainer}>
         <View style={styles.errorMessage}>
           {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
         </View>
@@ -218,9 +226,11 @@ export default function PantallaDeInicio() {
           <TouchableOpacity onPress={() => navigation.navigate('Inicio')}>
             <Text style={styles.registerLink}> Inicia Sesión</Text>
           </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </ImageBackground>
+        </ImageBackground>
+      </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
 
