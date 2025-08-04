@@ -28,8 +28,7 @@
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO"
-      ],
-      "softwareKeyboardLayoutMode": "pan"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

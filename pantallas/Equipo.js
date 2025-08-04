@@ -44,7 +44,7 @@ export default function CrearEquipo() {
 
       Alert.alert('Éxito', 'Usuario autorizado registrado correctamente');
       setEmail('');
-
+      
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {
