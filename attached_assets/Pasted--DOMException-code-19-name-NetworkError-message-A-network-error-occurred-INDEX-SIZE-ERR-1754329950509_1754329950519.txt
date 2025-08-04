@@ -1,0 +1,51 @@
+
+DOMException {code: 19, name: "NetworkError", message: "A network error occurred.", INDEX_SIZE_ERR: 1, DOMSTRING_SIZE_ERR: 2, …}
+ABORT_ERR: 20
+DATA_CLONE_ERR: 25
+DOMSTRING_SIZE_ERR: 2
+HIERARCHY_REQUEST_ERR: 3
+INDEX_SIZE_ERR: 1
+INUSE_ATTRIBUTE_ERR: 10
+INVALID_ACCESS_ERR: 15
+INVALID_CHARACTER_ERR: 5
+INVALID_MODIFICATION_ERR: 13
+INVALID_NODE_TYPE_ERR: 24
+INVALID_STATE_ERR: 11
+NAMESPACE_ERR: 14
+NETWORK_ERR: 19
+NOT_FOUND_ERR: 8
+NOT_SUPPORTED_ERR: 9
+NO_DATA_ALLOWED_ERR: 6
+NO_MODIFICATION_ALLOWED_ERR: 7
+QUOTA_EXCEEDED_ERR: 22
+SECURITY_ERR: 18
+SYNTAX_ERR: 12
+TIMEOUT_ERR: 23
+TYPE_MISMATCH_ERR: 17
+URL_MISMATCH_ERR: 21
+VALIDATION_ERR: 16
+WRONG_DOCUMENT_ERR: 4
+code: 19
+get code: ƒ get code()
+message: "A network error occurred."
+get message: ƒ get message()
+name: "NetworkError"
+get name: ƒ get name()
+constructor: ƒ DOMException()
+Symbol(Symbol.toStringTag): undefined
+[[Prototype]]: Object
+
+at t.value (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error en registro de gerente: 
+FirebaseError {code: "auth/configuration-not-found", customData: {…}, name: "FirebaseError"}
+code: "auth/configuration-not-found"
+customData: Object
+name: "FirebaseError"
+message: "Firebase: Error (auth/configuration-not-found)."
+stack: "FirebaseError: Firebase: Error (auth/configuration-not-found).↵ at createErrorInternal (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:66872:39)↵ at _fail (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:66839:11)↵ at _performFetchWithErrorHandling (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:67336:11)↵ at async _performSignInRequest (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:67352:28)↵ at async createUserWithEmailAndPassword (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:72622:22)↵ at async handleRegister (https://13ba933f-bf7e-4fff-8572-d922b2ffd7d1-00-1fos3kj3zswx0.worf.replit.dev:3000/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:106312:32)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
