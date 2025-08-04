@@ -1,0 +1,88 @@
+Propuesta de Flujo de Autenticación y Gestión de Usuarios
+Este documento describe el sistema de inicio de sesión y la navegación para una aplicación con dos niveles de acceso: Gerente (Nivel 1) y Empleado (Nivel 2).
+
+## 1. Resumen General
+El sistema debe controlar el acceso mediante correo electrónico y contraseña, diferenciando las capacidades y vistas según el rol del usuario.
+
+Nivel 1 (Gerente): Tiene control administrativo total. Puede gestionar la lista de empleados autorizados para acceder al sistema.
+
+Nivel 2 (Empleado): Tiene acceso limitado y solo puede iniciar sesión si ha sido previamente autorizado por un gerente.
+
+## 2. Flujo del Gerente (Nivel 1)
+a. Creación del Primer Gerente
+Debe existir un método inicial para crear la primera cuenta de Gerente. Este proceso de registro solicitará:
+
+Nombre
+
+Apellido
+
+Correo electrónico
+
+Contraseña
+
+Las credenciales se guardarán en una colección específica para gerentes en la base de datos.
+
+b. Inicio de Sesión
+La pantalla de login tendrá una opción para "Ingresar como Gerente". Se solicitará correo electrónico y contraseña.
+
+c. Pantalla de Bienvenida y Navegación
+Una vez autenticado, el gerente verá una pantalla de bienvenida personalizada (ej. "Bienvenido, [Nombre del Gerente]"). Desde aquí, podrá navegar a dos áreas principales:
+
+Página Principal: El dashboard o menú de operaciones de la aplicación.
+
+Configuración: La sección para administrar los accesos.
+
+d. Gestión de Empleados (Pantalla de Configuración)
+En esta sección, el gerente tendrá un panel para administrar la lista de empleados autorizados. Las funcionalidades clave son:
+
+Añadir Empleados: Un formulario para registrar a los empleados que tendrán acceso. Por cada empleado, se debe ingresar:
+
+Correo electrónico
+
+Puesto
+
+Contraseña de acceso
+
+Visualizar/Editar/Eliminar Empleados: El gerente debe poder ver la lista de empleados autorizados y modificar o revocar su acceso.
+
+## 3. Flujo del Empleado (Nivel 2)
+a. Inicio de Sesión
+La pantalla de login tendrá una opción para "Ingresar como Empleado". El formulario solicitará los siguientes tres campos:
+
+Correo electrónico
+
+Puesto
+
+Contraseña
+
+b. Proceso de Validación
+Al intentar iniciar sesión, el sistema debe realizar una validación crucial:
+
+Verificar que el correo electrónico ingresado exista en la lista de empleados autorizados por el gerente.
+
+Si el correo está en la lista, validar que el puesto y la contraseña coincidan con los datos registrados.
+
+Si el correo no se encuentra en la lista de autorizados, el inicio de sesión debe ser denegado, sin importar si la contraseña es correcta.
+
+## 4. Especificaciones para la Base de Datos
+Se sugiere la siguiente estructura de colecciones:
+
+Colección gerentes:
+
+nombre (string)
+
+apellido (string)
+
+correo (string, único)
+
+contraseña (string, encriptada)
+
+Colección empleados_autorizados:
+
+correo (string, único)
+
+puesto (string)
+
+contraseña (string, encriptada)
+
+autorizado_por (opcional: referencia al gerente que lo añadió)
