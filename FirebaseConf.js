@@ -5,14 +5,14 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore, serverTimestamp } from 'firebase/firestore';
 import { Platform } from 'react-native';
 
-// Configuración de Firebase
+// Configuración de Firebase (TEMPORAL - Reemplazar con configuración web real)
 const FirebaseConf = {
   apiKey: "AIzaSyCt9L4LzFJK2icufGt0HYiuGwhgKxhM7v0",
   authDomain: "sa2en-app.firebaseapp.com",
   projectId: "sa2en-app",
   storageBucket: "sa2en-app.appspot.com",
   messagingSenderId: "493790722792",
-  appId: "1:493790722792:android:c1f0badd73bbad9d25a75d"
+  appId: "1:493790722792:web:XXXXXXXXXXXXXXXXXXXXXXXX" // Reemplazar con el ID web real
 };
 
 // Validar que la configuración esté completa
