@@ -5,7 +5,6 @@ import Feather from '@expo/vector-icons/Feather';
 import { auth, db } from '../FirebaseConf';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
 
 export default function PantallaDeInicio() {
   const [email, setEmail] = useState('');
@@ -21,7 +20,6 @@ export default function PantallaDeInicio() {
   const [errorMessage, setErrorMessage] = useState('');
 
   const navigation = useNavigation();
-  const { loginManual } = useAuth();
 
   const handleGerenteLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -123,64 +121,34 @@ export default function PantallaDeInicio() {
     }
   };
 
-  // Funciones para los botones de prueba mejoradas
-  const handleTestGerenteLogin = async () => {
-    try {
-      setLoading(true);
-      setErrorMessage('');
-      
-      // Usar el contexto de Auth para login manual
-      const success = await loginManual('gerente');
-      
-      if (success) {
-        // La navegación se manejará automáticamente por el AuthContext
-        console.log('✅ Login de prueba como gerente exitoso');
-      } else {
-        setErrorMessage('Error en login de prueba');
-      }
-    } catch (error) {
-      console.error('Error en login de prueba gerente:', error);
-      setErrorMessage('Error en login de prueba');
-    } finally {
-      setLoading(false);
-    }
+  // Funciones para los botones de prueba
+  const handleTestGerenteLogin = () => {
+    // Simular login como gerente - navegar a Principal
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Principal' }],
+    });
   };
 
-  const handleTestEmpleadoLogin = async () => {
-    try {
-      setLoading(true);
-      setErrorMessage('');
-      
-      // Usar el contexto de Auth para login manual
-      const success = await loginManual('empleado');
-      
-      if (success) {
-        // La navegación se manejará automáticamente por el AuthContext
-        console.log('✅ Login de prueba como empleado exitoso');
-      } else {
-        setErrorMessage('Error en login de prueba');
-      }
-    } catch (error) {
-      console.error('Error en login de prueba empleado:', error);
-      setErrorMessage('Error en login de prueba');
-    } finally {
-      setLoading(false);
-    }
+  const handleTestEmpleadoLogin = () => {
+    // Simular login como empleado - navegar a Principal
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Principal' }],
+    });
   };
 
   return (
     <KeyboardAvoidingView 
       style={{ flex: 1 }} 
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       <ScrollView 
-        contentContainerStyle={{ flexGrow: 1, minHeight: '100%' }}
+        contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         bounces={false}
-        nestedScrollEnabled={true}
-        automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
       >
         <ImageBackground
           source={require('../assets/Fondo1.png')}

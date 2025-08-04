@@ -45,28 +45,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login manual para pruebas - función más robusta
+  // Login manual para pruebas
   const loginManual = async (role) => {
     try {
-      setLoading(true);
-      
       const mockUser = {
         uid: role === 'gerente' ? 'mock-gerente-id' : 'mock-empleado-id',
-        email: role === 'gerente' ? 'gerente@test.com' : 'empleado@test.com',
-        displayName: role === 'gerente' ? 'Gerente Test' : 'Empleado Test'
+        email: role === 'gerente' ? 'gerente@test.com' : 'empleado@test.com'
       };
 
       const mockProfile = {
         nombre: role === 'gerente' ? 'Gerente Test' : 'Empleado Test',
         email: mockUser.email,
-        puesto: role === 'empleado' ? 'Operario' : 'Gerente General',
-        fechaCreacion: new Date().toISOString(),
-        activo: true,
+        puesto: role === 'empleado' ? 'Operario' : 'Gerente',
         role: role
       };
-
-      // Simular delay de red para evitar errores de navegación rápida
-      await new Promise(resolve => setTimeout(resolve, 500));
 
       setUser(mockUser);
       setUserRole(role);
@@ -74,15 +66,10 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       
       console.log(`✅ Login manual como ${role} exitoso`);
-      console.log('✅ Usuario autenticado:', mockUser);
-      console.log('✅ Perfil cargado:', mockProfile);
-      
       return true;
     } catch (error) {
-      console.error('❌ Error en login manual:', error);
+      console.error('Error en login manual:', error);
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -1,296 +1,189 @@
 
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
-  Alert, 
-  ScrollView, 
-  KeyboardAvoidingView, 
-  Platform,
-  ActivityIndicator
-} from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
-import Feather from '@expo/vector-icons/Feather';
 import { db, serverTimestamp } from '../FirebaseConf';
-import { addDoc, collection } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import Feather from '@expo/vector-icons/Feather';
 
-export default function NewM() {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const { userProfile } = useAuth();
-  const tipo = route.params?.tipo || 'ingreso';
-
-  const [formData, setFormData] = useState({
-    monto: '',
-    descripcion: '',
-    categoria: '',
-    responsable: userProfile?.nombre || ''
-  });
-
+export default function NuevoMovimiento() {
+  const [descripcion, setDescripcion] = useState('');
+  const [monto, setMonto] = useState('');
+  const [tipo, setTipo] = useState('gasto');
+  const [categoria, setCategoria] = useState('alimentacion');
   const [loading, setLoading] = useState(false);
-  const [montoFocused, setMontoFocused] = useState(false);
-  const [descripcionFocused, setDescripcionFocused] = useState(false);
-  const [responsableFocused, setResponsableFocused] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  
+  const navigation = useNavigation();
+  const { user } = useAuth();
 
   const categorias = {
-    ingreso: [
-      'Ventas',
-      'Servicios',
-      'Comisiones',
-      'Intereses',
-      'Otros ingresos'
+    gasto: [
+      { label: 'Alimentación', value: 'alimentacion' },
+      { label: 'Transporte', value: 'transporte' },
+      { label: 'Materiales', value: 'materiales' },
+      { label: 'Servicios', value: 'servicios' },
+      { label: 'Equipo', value: 'equipo' },
+      { label: 'Otros gastos', value: 'otros_gastos' }
     ],
-    egreso: [
-      'Compras',
-      'Gastos operativos',
-      'Servicios públicos',
-      'Transporte',
-      'Mantenimiento',
-      'Suministros',
-      'Otros gastos'
+    ingreso: [
+      { label: 'Ventas', value: 'ventas' },
+      { label: 'Servicios', value: 'servicios_ingreso' },
+      { label: 'Reembolsos', value: 'reembolsos' },
+      { label: 'Otros ingresos', value: 'otros_ingresos' }
     ]
   };
 
-  useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      categoria: categorias[tipo][0]
-    }));
-  }, [tipo]);
-
   const handleSubmit = async () => {
-    // Validaciones
-    if (!formData.monto || !formData.descripcion || !formData.responsable) {
-      Alert.alert('Error', 'Por favor complete todos los campos obligatorios');
+    if (!descripcion.trim() || !monto.trim()) {
+      setErrorMessage('Por favor, complete todos los campos.');
       return;
     }
 
-    const monto = parseFloat(formData.monto);
-    if (isNaN(monto) || monto <= 0) {
-      Alert.alert('Error', 'Por favor ingrese un monto válido mayor a 0');
+    const montoNumerico = parseFloat(monto);
+    if (isNaN(montoNumerico) || montoNumerico <= 0) {
+      setErrorMessage('Ingrese un monto válido mayor a 0.');
       return;
     }
+
+    setLoading(true);
+    setErrorMessage('');
 
     try {
-      setLoading(true);
-
-      const movimientoData = {
-        tipo: tipo,
-        monto: monto,
-        descripcion: formData.descripcion.trim(),
-        categoria: formData.categoria,
-        responsable: formData.responsable.trim(),
+      await addDoc(collection(db, 'movimientos'), {
+        descripcion: descripcion.trim(),
+        monto: montoNumerico,
+        tipo,
+        categoria,
         fecha: serverTimestamp(),
-        usuario: userProfile?.email || 'usuario@test.com',
-        activo: true
-      };
+        userId: user.uid,
+        userEmail: user.email
+      });
 
-      await addDoc(collection(db, 'movimientos'), movimientoData);
-
-      Alert.alert(
-        'Éxito',
-        `${tipo === 'ingreso' ? 'Ingreso' : 'Egreso'} registrado correctamente`,
-        [
-          {
-            text: 'Aceptar',
-            onPress: () => navigation.goBack()
-          }
-        ]
-      );
-
+      Alert.alert('Éxito', 'Movimiento registrado correctamente', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
     } catch (error) {
-      console.error('Error al registrar movimiento:', error);
-      Alert.alert('Error', 'No se pudo registrar el movimiento. Intente nuevamente.');
+      console.error('Error al guardar movimiento:', error);
+      setErrorMessage('Error al guardar el movimiento. Intente nuevamente.');
     } finally {
       setLoading(false);
     }
   };
 
-  const formatCurrency = (text) => {
-    // Remover caracteres no numéricos excepto punto decimal
-    const cleaned = text.replace(/[^0-9.]/g, '');
-    
-    // Permitir solo un punto decimal
-    const parts = cleaned.split('.');
-    if (parts.length > 2) {
-      return parts[0] + '.' + parts[1];
-    }
-    
-    return cleaned;
-  };
-
   return (
     <KeyboardAvoidingView 
-      style={{ flex: 1 }} 
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Feather name="arrow-left" size={24} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.title}>
-            Nuevo {tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}
-          </Text>
-          <Feather 
-            name={tipo === 'ingreso' ? 'plus-circle' : 'minus-circle'} 
-            size={24} 
-            color={tipo === 'ingreso' ? '#28a745' : '#dc3545'} 
-          />
+          <Text style={styles.title}>Nuevo Movimiento</Text>
+          <View style={{ width: 24 }} />
         </View>
 
-        <ScrollView 
-          style={styles.content}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.formContainer}>
-            {/* Tipo de movimiento indicator */}
-            <View style={[
-              styles.tipoIndicator, 
-              { backgroundColor: tipo === 'ingreso' ? '#d4edda' : '#f8d7da' }
-            ]}>
-              <Feather 
-                name={tipo === 'ingreso' ? 'trending-up' : 'trending-down'} 
-                size={20} 
-                color={tipo === 'ingreso' ? '#28a745' : '#dc3545'} 
-              />
-              <Text style={[
-                styles.tipoText,
-                { color: tipo === 'ingreso' ? '#155724' : '#721c24' }
-              ]}>
-                {tipo === 'ingreso' ? 'INGRESO' : 'EGRESO'}
-              </Text>
+        <View style={styles.formContainer}>
+          {/* Error Message */}
+          {errorMessage ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
+          ) : null}
 
-            {/* Campo de monto */}
-            <Text style={styles.label}>Monto *</Text>
-            <View style={styles.montoContainer}>
-              <Text style={styles.currency}>$</Text>
-              <TextInput
-                style={[
-                  styles.montoInput,
-                  montoFocused && styles.inputFocused
-                ]}
-                placeholder="0.00"
-                value={formData.monto}
-                onChangeText={(text) => {
-                  const formatted = formatCurrency(text);
-                  setFormData({...formData, monto: formatted});
+          {/* Tipo de Movimiento */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Tipo de Movimiento</Text>
+            <View style={styles.radioContainer}>
+              <TouchableOpacity 
+                style={styles.radioOption}
+                onPress={() => {
+                  setTipo('gasto');
+                  setCategoria('alimentacion');
                 }}
-                onFocus={() => setMontoFocused(true)}
-                onBlur={() => setMontoFocused(false)}
-                keyboardType="numeric"
-              />
-            </View>
-
-            {/* Campo de descripción */}
-            <Text style={styles.label}>Descripción *</Text>
-            <TextInput
-              style={[
-                styles.textArea,
-                descripcionFocused && styles.inputFocused
-              ]}
-              placeholder="Describa el motivo del movimiento..."
-              value={formData.descripcion}
-              onChangeText={(text) => setFormData({...formData, descripcion: text})}
-              onFocus={() => setDescripcionFocused(true)}
-              onBlur={() => setDescripcionFocused(false)}
-              multiline
-              numberOfLines={3}
-            />
-
-            {/* Campo de categoría */}
-            <Text style={styles.label}>Categoría</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={formData.categoria}
-                onValueChange={(itemValue) => 
-                  setFormData({...formData, categoria: itemValue})
-                }
-                style={styles.picker}
               >
-                {categorias[tipo].map((cat, index) => (
-                  <Picker.Item key={index} label={cat} value={cat} />
-                ))}
-              </Picker>
-            </View>
-
-            {/* Campo de responsable */}
-            <Text style={styles.label}>Responsable *</Text>
-            <TextInput
-              style={[
-                styles.input,
-                responsableFocused && styles.inputFocused
-              ]}
-              placeholder="Nombre del responsable"
-              value={formData.responsable}
-              onChangeText={(text) => setFormData({...formData, responsable: text})}
-              onFocus={() => setResponsableFocused(true)}
-              onBlur={() => setResponsableFocused(false)}
-            />
-
-            {/* Resumen */}
-            <View style={styles.resumenContainer}>
-              <Text style={styles.resumenTitle}>Resumen</Text>
-              <View style={styles.resumenRow}>
-                <Text style={styles.resumenLabel}>Tipo:</Text>
-                <Text style={[
-                  styles.resumenValue,
-                  { color: tipo === 'ingreso' ? '#28a745' : '#dc3545' }
-                ]}>
-                  {tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}
-                </Text>
-              </View>
-              <View style={styles.resumenRow}>
-                <Text style={styles.resumenLabel}>Monto:</Text>
-                <Text style={styles.resumenValue}>
-                  ${formData.monto || '0.00'}
-                </Text>
-              </View>
-              <View style={styles.resumenRow}>
-                <Text style={styles.resumenLabel}>Categoría:</Text>
-                <Text style={styles.resumenValue}>{formData.categoria}</Text>
-              </View>
-            </View>
-
-            {/* Botones */}
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity 
-                style={styles.cancelButton}
-                onPress={() => navigation.goBack()}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                <View style={[styles.radioCircle, tipo === 'gasto' && styles.radioSelected]}>
+                  {tipo === 'gasto' && <View style={styles.radioInner} />}
+                </View>
+                <Text style={styles.radioLabel}>Gasto</Text>
               </TouchableOpacity>
-
+              
               <TouchableOpacity 
-                style={[
-                  styles.submitButton,
-                  { backgroundColor: tipo === 'ingreso' ? '#28a745' : '#dc3545' },
-                  loading && { opacity: 0.7 }
-                ]}
-                onPress={handleSubmit}
-                disabled={loading}
+                style={styles.radioOption}
+                onPress={() => {
+                  setTipo('ingreso');
+                  setCategoria('ventas');
+                }}
               >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <>
-                    <Feather name="save" size={20} color="#fff" />
-                    <Text style={styles.submitButtonText}>Guardar</Text>
-                  </>
-                )}
+                <View style={[styles.radioCircle, tipo === 'ingreso' && styles.radioSelected]}>
+                  {tipo === 'ingreso' && <View style={styles.radioInner} />}
+                </View>
+                <Text style={styles.radioLabel}>Ingreso</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </ScrollView>
-      </View>
+
+          {/* Descripción */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Descripción</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ej: Almuerzo para el equipo"
+              value={descripcion}
+              onChangeText={setDescripcion}
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+
+          {/* Monto */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Monto (S/)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="0.00"
+              value={monto}
+              onChangeText={setMonto}
+              keyboardType="numeric"
+            />
+          </View>
+
+          {/* Categoría */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Categoría</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={categoria}
+                style={styles.picker}
+                onValueChange={setCategoria}
+              >
+                {categorias[tipo].map((cat) => (
+                  <Picker.Item key={cat.value} label={cat.label} value={cat.value} />
+                ))}
+              </Picker>
+            </View>
+          </View>
+
+          {/* Botón Guardar */}
+          <TouchableOpacity 
+            style={[styles.button, loading && styles.buttonDisabled]} 
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? 'Guardando...' : 'Guardar Movimiento'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -298,170 +191,110 @@ export default function NewM() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f5f5f5',
+  },
+  scrollContainer: {
+    flexGrow: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    padding: 20,
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    elevation: 2,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
   },
-  content: {
+  formContainer: {
     flex: 1,
     padding: 20,
   },
-  formContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 20,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
-  },
-  tipoIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 15,
-    borderRadius: 10,
+  errorContainer: {
+    backgroundColor: '#ffebee',
+    padding: 10,
+    borderRadius: 8,
     marginBottom: 20,
-    gap: 10,
   },
-  tipoText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  errorText: {
+    color: '#c62828',
+    textAlign: 'center',
+  },
+  inputGroup: {
+    marginBottom: 25,
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#333',
     marginBottom: 8,
-    marginTop: 15,
-  },
-  montoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-  },
-  currency: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#666',
-    marginRight: 10,
-  },
-  montoInput: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: 'bold',
-    paddingVertical: 15,
-    color: '#333',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
-  },
-  textArea: {
+    backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
     padding: 15,
     fontSize: 16,
     textAlignVertical: 'top',
-    minHeight: 80,
   },
-  inputFocused: {
-    borderColor: '#007BFF',
+  radioContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioSelected: {
+    borderColor: '#4CAF50',
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#4CAF50',
+  },
+  radioLabel: {
+    fontSize: 16,
+    color: '#333',
   },
   pickerContainer: {
+    backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    backgroundColor: '#fff',
   },
   picker: {
     height: 50,
   },
-  resumenContainer: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 10,
-    padding: 15,
+  button: {
+    backgroundColor: '#4CAF50',
+    padding: 18,
+    borderRadius: 8,
+    alignItems: 'center',
     marginTop: 20,
   },
-  resumenTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-    textAlign: 'center',
+  buttonDisabled: {
+    backgroundColor: '#ccc',
   },
-  resumenRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 5,
-  },
-  resumenLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  resumenValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 30,
-    gap: 15,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#6c757d',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
+  buttonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  submitButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 15,
-    borderRadius: 8,
-    gap: 10,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });

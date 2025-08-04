@@ -6,43 +6,9 @@ import {
   getReactNativePersistence, // Para nativo
   browserLocalPersistence   // Para la web
 } from 'firebase/auth';
-// Importar AsyncStorage de manera segura
-let ReactNativeAsyncStorage;
-try {
-  ReactNativeAsyncStorage = require('@react-native-async-storage/async-storage').default;
-} catch (error) {
-  // Fallback para web - usar localStorage
-  ReactNativeAsyncStorage = {
-    getItem: async (key) => {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        return window.localStorage.getItem(key);
-      }
-      return null;
-    },
-    setItem: async (key, value) => {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.setItem(key, value);
-      }
-    },
-    removeItem: async (key) => {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.removeItem(key);
-      }
-    }
-  };
-}
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { getFirestore, serverTimestamp } from 'firebase/firestore';
-// Importar Platform de manera segura para web
-let Platform;
-try {
-  Platform = require('react-native').Platform;
-} catch (error) {
-  // Fallback para entorno web
-  Platform = {
-    OS: typeof window !== 'undefined' ? 'web' : 'ios',
-    select: (obj) => obj.web || obj.default || obj.ios
-  };
-}
+import { Platform } from 'react-native'; // Importante para detectar la plataforma
 
 // Datos extraídos del JSON proporcionado
 const FirebaseConf = {
@@ -76,22 +42,11 @@ try {
   app = initializeApp(FirebaseConf);
 
   // Inicializa Firebase Auth con persistencia condicional
-  try {
-    if (Platform.OS === 'web') {
-      auth = initializeAuth(app, {
-        persistence: browserLocalPersistence
-      });
-    } else {
-      auth = initializeAuth(app, {
-        persistence: getReactNativePersistence(ReactNativeAsyncStorage)
-      });
-    }
-  } catch (error) {
-    // Si initializeAuth falla, usar getAuth() como fallback
-    console.warn('initializeAuth falló, usando getAuth() como fallback:', error.message);
-    const { getAuth } = require('firebase/auth');
-    auth = getAuth(app);
-  }
+  auth = initializeAuth(app, {
+    persistence: Platform.OS === 'web'
+      ? browserLocalPersistence // Usa esta si estás en la web
+      : getReactNativePersistence(ReactNativeAsyncStorage) // Usa esta para iOS/Android
+  });
 
   // Inicializar Firestore
   db = getFirestore(app);
