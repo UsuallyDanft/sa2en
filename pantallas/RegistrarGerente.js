@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Feather from '@expo/vector-icons/Feather';
-import registrationService from '../services/registrationService';
+import registrationService from '../services/registrationService'; //
 
 export default function RegistrarGerente() {
   const [nombre, setNombre] = useState('');

@@ -3,7 +3,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
 
 /**
- * Servicio de registro centralizado
+ * Servicio de registro centralizado  asi o mas?
  */
 class RegistrationService {
   /**
@@ -121,7 +121,11 @@ class RegistrationService {
     }
   }
 
-  /**
+  
+
+
+
+    /**
    * Convertir errores de Firebase a mensajes legibles
    */
   getErrorMessage(error) {
