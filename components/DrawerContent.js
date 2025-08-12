@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#fafafa',
     paddingVertical: 30,
     paddingHorizontal: 20,
     alignItems: 'center',
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fafafa',
+    color: '#333',
     marginBottom: 15,
   },
   userInfo: {
@@ -78,12 +78,12 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fafafa',
+    color: '#333',
     marginBottom: 5,
   },
   userEmail: {
     fontSize: 14,
-    color: '#e8f5e8',
+    color: '#666',
   },
   drawerItems: {
     flex: 1,

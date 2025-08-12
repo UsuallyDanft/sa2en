@@ -261,13 +261,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   radioSelected: {
-    borderColor: '#4CAF50',
+    borderColor: '#999',
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#999',
   },
   radioLabel: {
     fontSize: 16,
@@ -283,17 +283,19 @@ const styles = StyleSheet.create({
     height: 50,
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#fafafa',
     padding: 18,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
   buttonDisabled: {
     backgroundColor: '#ccc',
   },
   buttonText: {
-    color: '#fff',
+    color: '#333',
     fontSize: 18,
     fontWeight: 'bold',
   },
