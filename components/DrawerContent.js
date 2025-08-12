@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
@@ -29,17 +28,17 @@ export default function DrawerContent(props) {
             </View>
           )}
         </View>
-        
+
         {/* Items del drawer */}
         <View style={styles.drawerItems}>
           <DrawerItemList {...props} />
         </View>
       </DrawerContentScrollView>
-      
+
       {/* Footer con botón de logout */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Feather name="log-out" size={20} color="#fff" />
+          <Feather name="log-out" size={20} color="#fafafa" />
           <Text style={styles.logoutText}>Cerrar Sesión</Text>
         </TouchableOpacity>
       </View>
@@ -50,7 +49,7 @@ export default function DrawerContent(props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#fafafa',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -70,7 +69,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#fafafa',
     marginBottom: 15,
   },
   userInfo: {
@@ -79,7 +78,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: '#fafafa',
     marginBottom: 5,
   },
   userEmail: {
@@ -105,7 +104,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   logoutText: {
-    color: '#fff',
+    color: '#fafafa',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 10,

@@ -33,7 +33,7 @@ export const styles = StyleSheet.create({
   welcomeText: {
     fontSize: width > 400 ? 28 : 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#fafafa',
     textAlign: 'center',
     marginBottom: 10,
     paddingHorizontal: 15,
@@ -44,7 +44,7 @@ export const styles = StyleSheet.create({
   },
   roleText: {
     fontSize: width > 400 ? 16 : 14,
-    color: '#fff',
+    color: '#fafafa',
     textAlign: 'center',
     marginBottom: 20,
     opacity: 0.9,
@@ -54,7 +54,7 @@ export const styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   descriptionContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(250, 250, 250, 0.95)',
     borderRadius: 15,
     padding: width > 400 ? 20 : 15,
     marginBottom: 30,
@@ -94,7 +94,7 @@ export const styles = StyleSheet.create({
     marginRight: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: '#fafafa',
     fontSize: 18,
     fontWeight: 'bold',
   },
