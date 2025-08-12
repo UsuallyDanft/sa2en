@@ -2,6 +2,10 @@ import { StyleSheet, Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
+
 export const styles = StyleSheet.create({
   background: {
     flex: 1,
@@ -27,24 +31,28 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 20,
   },
   welcomeText: {
-    fontSize: 28,
+    fontSize: width > 400 ? 28 : 24,
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
     marginBottom: 10,
+    paddingHorizontal: 15,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
+    flexWrap: 'wrap',
   },
   roleText: {
-    fontSize: 16,
+    fontSize: width > 400 ? 16 : 14,
     color: '#fff',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
     opacity: 0.9,
+    paddingHorizontal: 15,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
@@ -52,27 +60,33 @@ export const styles = StyleSheet.create({
   descriptionContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 15,
-    padding: 20,
-    marginBottom: 40,
-    width: width * 0.85,
+    padding: width > 400 ? 20 : 15,
+    marginBottom: 30,
+    width: width * 0.90,
+    maxWidth: 400,
+    minHeight: 100,
   },
   descriptionText: {
-    fontSize: 16,
+    fontSize: width > 400 ? 16 : 14,
     color: '#666',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: width > 400 ? 24 : 20,
+    flexWrap: 'wrap',
   },
   buttonsContainer: {
     width: '100%',
     alignItems: 'center',
+    paddingHorizontal: 10,
   },
   button: {
     backgroundColor: '#000',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 40,
+    paddingVertical: width > 400 ? 15 : 12,
+    paddingHorizontal: width > 400 ? 40 : 30,
+    minWidth: 200,
+    maxWidth: width * 0.8,
     borderRadius: 25,
     minWidth: 200,
     marginBottom: 15,
