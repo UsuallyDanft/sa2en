@@ -54,26 +54,33 @@ export default function PantallaDeRegistros() {
 
     setErrorMessage('');
 
+    // Determinar el nombre de la subcolección según el tipo de registro
+    let subcoleccion = '';
+    if (registro === 'Obra') subcoleccion = 'Robra';
+    else if (registro === 'Servicios') subcoleccion = 'Rservicios';
+    else if (registro === 'Bienes') subcoleccion = 'Rbienes';
+    else subcoleccion = 'registro'; // fallback
+
     // Preparar el objeto de datos que se guardará
     const dataParaGuardar = {
-      userId: user.uid, // Guardar el ID del usuario para referencia
+      userId: user.uid,
       tipoRegistro: registro,
       nombreRegistro: nombreR,
       tipoEntidad: entidad === 'Otro' ? entidadI : entidad,
       nombreEntidad: nombreE,
       lugar: lugar,
-      fecha: date, // Firestore maneja objetos Date de JavaScript
-      creadoEn: serverTimestamp() // Añade una marca de tiempo del servidor
+      fecha: date,
+      creadoEn: serverTimestamp()
     };
 
     try {
-      // Crear una referencia a la subcolección 'registro' del usuario
-      // La ruta será: users/{ID_DEL_USUARIO}/registro/{ID_DEL_DOCUMENTO}
-      const docRef = await addDoc(collection(db, 'gerentes', user.uid, 'registro'), dataParaGuardar);
-      console.log("Documento guardado con ID: ", docRef.id);
+      // Usar la API modular para crear la referencia y guardar el documento
+      const ref = collection(db, 'gerentes', user.uid, subcoleccion);
+      await addDoc(ref, dataParaGuardar);
+      console.log("Registro guardado con éxito");
       setIsSaved(true); // Mostrar mensaje de éxito
     } catch (error) {
-      console.error("Error al guardar el registro en Firestore: ", error);
+      console.error("Error al guardar:", error);
       setErrorMessage('Error al guardar los datos. Intente nuevamente.');
     }
   };

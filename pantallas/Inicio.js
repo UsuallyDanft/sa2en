@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -8,19 +7,16 @@ import authService from '../services/authService';
 export default function PantallaDeInicio() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [puesto, setPuesto] = useState('');
-  const [tipoLogin, setTipoLogin] = useState('gerente'); // 'gerente' o 'empleado'
   const [loading, setLoading] = useState(false);
 
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-  const [puestoFocused, setPuestoFocused] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const navigation = useNavigation();
 
-  const handleGerenteLogin = async () => {
+  const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       setErrorMessage('Por favor, complete todos los campos.');
       return;
@@ -31,7 +27,6 @@ export default function PantallaDeInicio() {
 
     try {
       const result = await authService.loginGerente(email, password);
-      
       if (result.success) {
         // La navegación se manejará automáticamente por el AuthContext
         console.log('Login de gerente exitoso');
@@ -43,40 +38,6 @@ export default function PantallaDeInicio() {
       setErrorMessage('Error al iniciar sesión');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleEmpleadoLogin = async () => {
-    if (!email.trim() || !password.trim() || !puesto.trim()) {
-      setErrorMessage('Por favor, complete todos los campos.');
-      return;
-    }
-
-    setLoading(true);
-    setErrorMessage('');
-
-    try {
-      const result = await authService.loginEmpleado(email, password, puesto);
-      
-      if (result.success) {
-        // La navegación se manejará automáticamente por el AuthContext
-        console.log('Login de empleado exitoso');
-      } else {
-        setErrorMessage(result.error);
-      }
-    } catch (error) {
-      console.error('Error en login de empleado:', error);
-      setErrorMessage('Error al iniciar sesión');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogin = () => {
-    if (tipoLogin === 'gerente') {
-      handleGerenteLogin();
-    } else {
-      handleEmpleadoLogin();
     }
   };
 
@@ -101,29 +62,6 @@ export default function PantallaDeInicio() {
           ) : null}
         </View>
 
-        {/* Selector de tipo de login */}
-        <View style={styles.radioContainer}>
-          <TouchableOpacity 
-            style={styles.radioButton} 
-            onPress={() => setTipoLogin('gerente')}
-          >
-            <View style={[styles.radioCircle, tipoLogin === 'gerente' && styles.radioSelected]}>
-              {tipoLogin === 'gerente' && <View style={styles.radioInnerCircle}/>}
-            </View>
-            <Text style={styles.radioLabel}>Ingresar como Gerente</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.radioButton} 
-            onPress={() => setTipoLogin('empleado')}
-          >
-            <View style={[styles.radioCircle, tipoLogin === 'empleado' && styles.radioSelected]}>
-              {tipoLogin === 'empleado' && <View style={styles.radioInnerCircle}/>}
-            </View>
-            <Text style={styles.radioLabel}>Ingresar como Empleado</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Input de correo */}
         <TextInput
           style={[styles.input, emailFocused && styles.inputFocused]}
@@ -136,18 +74,6 @@ export default function PantallaDeInicio() {
           keyboardType="email-address"
         />
 
-        {/* Input de puesto (solo para empleados) */}
-        {tipoLogin === 'empleado' && (
-          <TextInput
-            style={[styles.input, puestoFocused && styles.inputFocused]}
-            placeholder="Puesto"
-            value={puesto}
-            onChangeText={setPuesto}
-            onFocus={() => setPuestoFocused(true)}
-            onBlur={() => setPuestoFocused(false)}
-          />
-        )}
-       
         <View style={styles.passwordContainer}>
           <TextInput
             style={[styles.inputPassword, passwordFocused && styles.inputFocused]}
@@ -189,14 +115,12 @@ export default function PantallaDeInicio() {
           )}
         </TouchableOpacity>
 
-        {tipoLogin === 'gerente' && (
-          <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>¿Primer gerente?</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('RegistrarGerente')}>
-              <Text style={styles.registerLink}> Crear cuenta</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>¿Primer gerente?</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('RegistrarGerente')}>
+            <Text style={styles.registerLink}> Crear cuenta</Text>
+          </TouchableOpacity>
+        </View>
       </View>
         </ImageBackground>
       </ScrollView>
@@ -219,7 +143,7 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: '85%',
-    height: 550,
+    height: 400,
     padding: 20,
     backgroundColor: '#fff',
     borderRadius: 25,
@@ -298,37 +222,5 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 13,
     marginBottom: 10,
-  },
-  radioContainer: {
-    width: '100%',
-    marginTop: 10,
-    marginBottom: 15,
-  },
-  radioButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 8,
-  },
-  radioCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#ccc',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  radioSelected: {
-    borderColor: '#000',
-  },
-  radioInnerCircle: {
-    width: 8,
-    height: 8,
-    borderRadius: 5,
-    backgroundColor: '#000',
-  },
-  radioLabel: {
-    fontSize: 14,
   },
 });

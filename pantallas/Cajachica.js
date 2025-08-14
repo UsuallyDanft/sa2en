@@ -1,31 +1,92 @@
 import React, { useState } from 'react'
 import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Switch, KeyboardAvoidingView, ScrollView, Platform } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
-import Feather from '@expo/vector-icons/Feather'
 import { Picker } from '@react-native-picker/picker'
+import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore'
+import { db, auth } from '../FirebaseConf'
 
 export default function PantallaDeRegistros() {
   const [nombreC, setNombreC] = useState('')
+  const [registro, setRegistro] = useState('Obra')
   const [nombreS, setNombreS] = useState('')
-  const [formaE, setFormaE] = useState('')  
-  const [registro, setRegistro] = useState('Selecciona')
+  const [formaE, setFormaE] = useState('')
+  const [monto, setMonto] = useState('')
   const [switchS, setSwitchS] = useState(false)
   const [cajainput, setCajainput] = useState('')
 
   const [nombreCFocused, setNombreCFocused] = useState(false)
   const [nombreSFocused, setNombreSFocused] = useState(false)
   const [formaEFocused, setFormaEFocused] = useState(false)
+  const [montoFocused, setMontoFocused] = useState(false)
   const [cajainputFocused, setCajainputFocused] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
   const navigation = useNavigation()
 
-  const registroNuevo = () => {
-    if (!nombreC.trim() || !nombreS.trim() || !formaE.trim()) {
+  // Determina la subcolección según el tipo de registro
+  const getSubcoleccion = (tipo) => {
+    if (tipo === 'Obra') return 'Robra'
+    if (tipo === 'Servicios') return 'Rservicios'
+    if (tipo === 'Bienes') return 'Rbienes'
+    return 'registro'
+  }
+
+  const registroNuevo = async () => {
+    if (!nombreC.trim() || !nombreS.trim() || !formaE.trim() || !monto.trim()) {
       setErrorMessage('Por favor, complete todos los campos.')
       return
     }
     setErrorMessage('')
+
+    const user = auth.currentUser
+    if (!user) {
+      setErrorMessage('No hay un usuario autenticado. Por favor, inicie sesión.')
+      return
+    }
+
+    let montoFinal = parseFloat(monto)
+    // Si el switch está activo, buscar la caja anterior y sumar su monto
+    if (switchS && cajainput.trim()) {
+      try {
+        const subcoleccion = getSubcoleccion(registro)
+        const cajasChicasRef = collection(db, 'gerentes', user.uid, subcoleccion, nombreS, 'cajas_chicas')
+        const q = query(cajasChicasRef, where('nombreCaja', '==', cajainput.trim()))
+        const querySnapshot = await getDocs(q)
+        if (!querySnapshot.empty) {
+          const cajaAnterior = querySnapshot.docs[0].data()
+          montoFinal += parseFloat(cajaAnterior.monto) || 0
+        } else {
+          setErrorMessage('No se encontró la caja anterior con ese nombre.')
+          return
+        }
+      } catch (error) {
+        setErrorMessage('Error al buscar la caja anterior.')
+        return
+      }
+    }
+
+    // Guardar la nueva caja chica
+    try {
+      const subcoleccion = getSubcoleccion(registro)
+      const cajasChicasRef = collection(db, 'gerentes', user.uid, subcoleccion, nombreS, 'cajas_chicas')
+      await addDoc(cajasChicasRef, {
+        nombreCaja: nombreC,
+        nombreServicio: nombreS,
+        formaEntrega: formaE,
+        monto: montoFinal,
+        creadoEn: serverTimestamp()
+      })
+      setErrorMessage('')
+      setNombreC('')
+      setNombreS('')
+      setFormaE('')
+      setMonto('')
+      setCajainput('')
+      setSwitchS(false)
+      alert('Caja chica guardada con éxito')
+    } catch (error) {
+      setErrorMessage('Error al guardar la caja chica.')
+    }
   }
 
   return (
@@ -43,70 +104,28 @@ export default function PantallaDeRegistros() {
           <Image source={require('../assets/Logo.png')} style={styles.logo} />
 
           <View style={styles.formContainer}>
-        <View style={styles.errorMessage}>
-          {errorMessage ? (
-            <Text style={styles.errorText}>{errorMessage}</Text>
-          ) : null}
-        </View>
-
-        <TextInput
-          style={[styles.inputNombreC, nombreCFocused && styles.inputFocused]}
-          placeholder="Nombre de la caja"
-          value={nombreC}
-          onChangeText={setNombreC}
-          onFocus={() => setNombreCFocused(true)}
-          onBlur={() => setNombreCFocused(false)}
-        />
-        
-        <TextInput
-          style={[styles.input, nombreSFocused && styles.inputFocused]}
-          placeholder="Nombre del servicio"
-          value={nombreS}
-          onChangeText={setNombreS}
-          onFocus={() => setNombreSFocused(true)}
-          onBlur={() => setNombreSFocused(false)}
-        />
-
-        <TextInput
-          style={[styles.inputFormaE, formaEFocused && styles.inputFocused]}
-          placeholder="Forma de entrega"
-          value={formaE}
-          onChangeText={setFormaE}
-          onFocus={() => setFormaEFocused(true)}
-          onBlur={() => setFormaEFocused(false)}
-        />
-
-        {/* Switch modificado para que esté a la derecha con el estado */}
-        <View style={styles.switchContainer}>
-          <View style={styles.switchContent}>
-            <View style={styles.switchLabels}>
-              <Text style={styles.switchMainLabel}>¿Hay fondos de una</Text>
-              <Text style={styles.switchMainLabel}>caja anterior?</Text>
+            <View style={styles.errorMessage}>
+              {errorMessage ? (
+                <Text style={styles.errorText}>{errorMessage}</Text>
+              ) : null}
             </View>
-            <View style={styles.switchRightSection}>
-              <Text style={styles.switchStateText}>
-                {switchS ? 'Sí' : 'No'}
-              </Text>
-              <Switch
-                value={switchS}
-                onValueChange={setSwitchS}
-                trackColor={{ false: "#e0e0e0", true: "#1E90FF" }}
-                thumbColor={"#FFFFFF"}
-                style={styles.customSwitch}
-              />
-            </View>
-          </View>
-        </View>
 
-        {switchS && (
-          <>
+            <TextInput
+              style={[styles.inputNombreC, nombreCFocused && styles.inputFocused]}
+              placeholder="Nombre de la caja"
+              value={nombreC}
+              onChangeText={setNombreC}
+              onFocus={() => setNombreCFocused(true)}
+              onBlur={() => setNombreCFocused(false)}
+            />
+
+            {/* Picker de tipo de registro */}
             <View style={styles.row}>
               <Text style={styles.labelText}>Tipo de Registro</Text>
               <Picker
                 selectedValue={registro}
                 style={styles.picker}
                 onValueChange={(itemValue) => setRegistro(itemValue)}
-                enabled={switchS}
               >
                 <Picker.Item label="Obra" value="Obra" />
                 <Picker.Item label="Servicios" value="Servicios" />
@@ -115,20 +134,71 @@ export default function PantallaDeRegistros() {
             </View>
 
             <TextInput
-              style={[styles.input, cajainputFocused , !switchS && styles.inputcaja]}
-              placeholder="Nombre de la caja"
-              value={cajainput}
-              onChangeText={setCajainput}
-              onFocus={() => setCajainputFocused(true)}
-              onBlur={() => setCajainputFocused(false)}
-              editable={switchS}
+              style={[styles.input, nombreSFocused && styles.inputFocused]}
+              placeholder="Nombre del registro"
+              value={nombreS}
+              onChangeText={setNombreS}
+              onFocus={() => setNombreSFocused(true)}
+              onBlur={() => setNombreSFocused(false)}
             />
-          </>
-        )}
 
-        <TouchableOpacity style={styles.button} onPress={registroNuevo}>
-          <Text style={styles.buttonText}>Guardar Registro</Text>
-        </TouchableOpacity>
+            <TextInput
+              style={[styles.inputFormaE, formaEFocused && styles.inputFocused]}
+              placeholder="Forma de entrega"
+              value={formaE}
+              onChangeText={setFormaE}
+              onFocus={() => setFormaEFocused(true)}
+              onBlur={() => setFormaEFocused(false)}
+            />
+
+            {/* Input para el monto */}
+            <TextInput
+              style={[styles.input, montoFocused && styles.inputFocused]}
+              placeholder="Monto"
+              value={monto}
+              onChangeText={setMonto}
+              onFocus={() => setMontoFocused(true)}
+              onBlur={() => setMontoFocused(false)}
+              keyboardType="numeric"
+            />
+
+            {/* Switch para caja anterior */}
+            <View style={styles.switchContainer}>
+              <View style={styles.switchContent}>
+                <View style={styles.switchLabels}>
+                  <Text style={styles.switchMainLabel}>¿Hay fondos de una</Text>
+                  <Text style={styles.switchMainLabel}>caja anterior?</Text>
+                </View>
+                <View style={styles.switchRightSection}>
+                  <Text style={styles.switchStateText}>
+                    {switchS ? 'Sí' : 'No'}
+                  </Text>
+                  <Switch
+                    value={switchS}
+                    onValueChange={setSwitchS}
+                    trackColor={{ false: "#e0e0e0", true: "#1E90FF" }}
+                    thumbColor={"#FFFFFF"}
+                    style={styles.customSwitch}
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Input para buscar caja anterior solo si el switch está activo */}
+            {switchS && (
+              <TextInput
+                style={[styles.input, cajainputFocused && styles.inputFocused]}
+                placeholder="Nombre de la caja anterior"
+                value={cajainput}
+                onChangeText={setCajainput}
+                onFocus={() => setCajainputFocused(true)}
+                onBlur={() => setCajainputFocused(false)}
+              />
+            )}
+
+            <TouchableOpacity style={styles.button} onPress={registroNuevo}>
+              <Text style={styles.buttonText}>Guardar Registro</Text>
+            </TouchableOpacity>
           </View>
         </ImageBackground>
       </ScrollView>

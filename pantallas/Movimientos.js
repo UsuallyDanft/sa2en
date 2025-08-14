@@ -1,165 +1,280 @@
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { db } from '../FirebaseConf';
-import { collection, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
-import Feather from '@expo/vector-icons/Feather';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Picker, ActivityIndicator } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { Feather } from '@expo/vector-icons';
+import { db, auth } from '../FirebaseConf';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 
 export default function Movimientos() {
-  const [movimientos, setMovimientos] = useState([]);
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const navigation = useNavigation();
-  const { user } = useAuth();
+  
+  // Estados para los filtros
+  const [tipoRegistro, setTipoRegistro] = useState('Obra');
+  const [nombreServicio, setNombreServicio] = useState('');
+  const [nombreCaja, setNombreCaja] = useState('');
+  
+  // Estados para los datos
+  const [serviciosDisponibles, setServiciosDisponibles] = useState([]);
+  const [cajasDisponibles, setCajasDisponibles] = useState([]);
+  const [movimientos, setMovimientos] = useState([]);
+  
+  // Estados para los saldos
+  const [saldoActual, setSaldoActual] = useState(0);
+  const [montoCaja, setMontoCaja] = useState(0);
 
+  // Mapeo de tipos de registro a subcolecciones
+  const getSubcoleccion = (tipo) => {
+    const map = {
+      'Obra': 'Robra',
+      'Servicios': 'Rservicios',
+      'Bienes': 'Rbienes'
+    };
+    return map[tipo] || 'Robra';
+  };
+
+  // Cargar servicios disponibles según tipo de registro
   useEffect(() => {
-    const q = query(
-      collection(db, 'movimientos'),
-      orderBy('fecha', 'desc')
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const subcoleccion = getSubcoleccion(tipoRegistro);
+    const serviciosRef = collection(db, 'gerentes', user.uid, subcoleccion);
+    
+    const unsubscribe = onSnapshot(serviciosRef, (snapshot) => {
+      const servicios = snapshot.docs.map(doc => doc.id);
+      setServiciosDisponibles(servicios);
+      setNombreServicio('');
+      setNombreCaja('');
+    });
+
+    return unsubscribe;
+  }, [tipoRegistro]);
+
+  // Cargar cajas disponibles cuando se selecciona un servicio
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user || !nombreServicio) return;
+
+    const subcoleccion = getSubcoleccion(tipoRegistro);
+    const cajasRef = collection(db, 'gerentes', user.uid, subcoleccion, nombreServicio, 'cajas_chicas');
+    
+    const unsubscribe = onSnapshot(cajasRef, (snapshot) => {
+      const cajas = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        nombre: doc.data().nombreCaja,
+        monto: doc.data().monto
+      }));
+      
+      setCajasDisponibles(cajas);
+      setNombreCaja('');
+    });
+
+    return unsubscribe;
+  }, [tipoRegistro, nombreServicio]);
+
+  // Cargar movimientos cuando se selecciona una caja
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user || !nombreServicio || !nombreCaja) return;
+
+    const subcoleccion = getSubcoleccion(tipoRegistro);
+    const movimientosRef = collection(
+      db, 
+      'gerentes', 
+      user.uid, 
+      subcoleccion, 
+      nombreServicio, 
+      'cajas_chicas', 
+      nombreCaja, 
+      'movimientos'
     );
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const movimientosData = [];
-      querySnapshot.forEach((doc) => {
-        movimientosData.push({
-          id: doc.id,
-          ...doc.data(),
-          fecha: doc.data().fecha?.toDate() || new Date()
-        });
-      });
-      setMovimientos(movimientosData);
-      setLoading(false);
-      setRefreshing(false);
-    }, (error) => {
-      console.error('Error fetching movimientos:', error);
+    const q = query(movimientosRef, orderBy('creadoEn', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const movs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        fecha: doc.data().creadoEn?.toDate()
+      }));
+      
+      setMovimientos(movs);
+      
+      // Calcular saldo actual
+      const cajaSeleccionada = cajasDisponibles.find(c => c.nombre === nombreCaja);
+      if (cajaSeleccionada) {
+        const saldoInicial = parseFloat(cajaSeleccionada.monto) || 0;
+        const totalEgresos = movs.reduce((sum, mov) => sum + (mov.tipo === 'egreso' ? parseFloat(mov.monto) : 0), 0);
+        setSaldoActual(saldoInicial - totalEgresos);
+        setMontoCaja(saldoInicial);
+      }
+      
       setLoading(false);
       setRefreshing(false);
     });
 
-    return () => unsubscribe();
-  }, []);
-
-  const handleDelete = (id, descripcion) => {
-    Alert.alert(
-      'Eliminar Movimiento',
-      `¿Estás seguro de eliminar "${descripcion}"?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteDoc(doc(db, 'movimientos', id));
-              Alert.alert('Éxito', 'Movimiento eliminado correctamente');
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo eliminar el movimiento');
-            }
-          }
-        }
-      ]
-    );
-  };
+    return unsubscribe;
+  }, [tipoRegistro, nombreServicio, nombreCaja, cajasDisponibles]);
 
   const onRefresh = () => {
     setRefreshing(true);
+    // La recarga se maneja automáticamente por los listeners de Firestore
   };
 
-  const renderMovimiento = ({ item }) => (
-    <View style={styles.movimientoCard}>
-      <View style={styles.movimientoHeader}>
-        <View style={[styles.tipoIndicator, { 
-          backgroundColor: item.tipo === 'ingreso' ? '#4CAF50' : '#f44336' 
-        }]} />
-        <View style={styles.movimientoInfo}>
-          <Text style={styles.descripcion}>{item.descripcion}</Text>
-          <Text style={styles.fecha}>
-            {item.fecha.toLocaleDateString()} - {item.fecha.toLocaleTimeString()}
-          </Text>
-          <Text style={styles.categoria}>{item.categoria}</Text>
-        </View>
-        <View style={styles.montoContainer}>
-          <Text style={[styles.monto, { 
-            color: item.tipo === 'ingreso' ? '#4CAF50' : '#f44336' 
-          }]}>
-            {item.tipo === 'ingreso' ? '+' : '-'}S/ {item.monto}
-          </Text>
-        </View>
-      </View>
-      
-      <View style={styles.actionButtons}>
-        <TouchableOpacity 
-          style={styles.deleteButton}
-          onPress={() => handleDelete(item.id, item.descripcion)}
-        >
-          <Feather name="trash-2" size={16} color="#fff" />
-          <Text style={styles.deleteButtonText}>Eliminar</Text>
-        </TouchableOpacity>
-      </View>
+  const handleAddMovimiento = (tipo) => {
+    const user = auth.currentUser;
+    if (!user || !nombreServicio || !nombreCaja) return;
+
+    navigation.navigate('NewM', {
+      tipo,
+      tipoRegistro,
+      nombreServicio,
+      nombreCaja,
+      montoCaja,
+      subcoleccion: getSubcoleccion(tipoRegistro)
+    });
+  };
+
+if (loading && !nombreCaja && serviciosDisponibles.length > 0 && cajasDisponibles.length > 0) {
+  return (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color="#0B1B4D" />
+      <Text>Cargando datos iniciales...</Text>
     </View>
   );
-
-  const calculateTotal = () => {
-    return movimientos.reduce((total, mov) => {
-      return mov.tipo === 'ingreso' ? total + mov.monto : total - mov.monto;
-    }, 0);
-  };
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Cargando movimientos...</Text>
-      </View>
-    );
-  }
+}
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Feather name="arrow-left" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Movimientos</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('NewM')}>
-          <Feather name="plus" size={24} color="#4CAF50" />
-        </TouchableOpacity>
+      {/* Filtros */}
+      <View style={styles.filtersContainer}>
+        <View style={styles.filterRow}>
+          <Text style={styles.filterLabel}>Tipo:</Text>
+          <Picker
+            selectedValue={tipoRegistro}
+            style={styles.picker}
+            onValueChange={setTipoRegistro}>
+            <Picker.Item label="Obra" value="Obra" />
+            <Picker.Item label="Servicios" value="Servicios" />
+            <Picker.Item label="Bienes" value="Bienes" />
+          </Picker>
+        </View>
+
+        <View style={styles.filterRow}>
+          <Text style={styles.filterLabel}>Servicio:</Text>
+          <Picker
+            selectedValue={nombreServicio}
+            style={styles.picker}
+            onValueChange={setNombreServicio}>
+            <Picker.Item label="Seleccione servicio" value="" />
+            {serviciosDisponibles.map((servicio, i) => (
+              <Picker.Item key={i} label={servicio} value={servicio} />
+            ))}
+          </Picker>
+        </View>
+
+        <View style={styles.filterRow}>
+          <Text style={styles.filterLabel}>Caja:</Text>
+          <Picker
+            selectedValue={nombreCaja}
+            style={styles.picker}
+            onValueChange={setNombreCaja}>
+            <Picker.Item label="Seleccione caja" value="" />
+            {cajasDisponibles.map((caja, i) => (
+              <Picker.Item key={i} label={caja.nombre} value={caja.nombre} />
+            ))}
+          </Picker>
+        </View>
       </View>
 
-      {/* Balance */}
-      <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Balance Total</Text>
-        <Text style={[styles.balanceAmount, {
-          color: calculateTotal() >= 0 ? '#4CAF50' : '#f44336'
-        }]}>
-          S/ {calculateTotal().toFixed(2)}
-        </Text>
-      </View>
+      {/* Mostrar datos solo si hay una caja seleccionada */}
+      {nombreCaja ? (
+        <>
+          {/* Información de la caja */}
+          <View style={styles.headerBox}>
+            <Text style={styles.cajaTitle}>{nombreCaja}</Text>
+            <View style={styles.saldoContainer}>
+              <Text style={styles.saldoLabel}>Saldo disponible:</Text>
+              <Text style={styles.saldoTotal}>S/ {saldoActual.toFixed(2)}</Text>
+            </View>
+            <Text style={styles.montoInicial}>Monto inicial: S/ {montoCaja.toFixed(2)}</Text>
+          </View>
 
-      {/* Lista de movimientos */}
-      <FlatList
-        data={movimientos}
-        renderItem={renderMovimiento}
-        keyExtractor={item => item.id}
-        style={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Feather name="inbox" size={50} color="#ccc" />
-            <Text style={styles.emptyText}>No hay movimientos registrados</Text>
+          {/* Lista de movimientos */}
+          <FlatList
+            data={movimientos}
+            renderItem={({ item }) => (
+              <TouchableOpacity 
+                style={[
+                  styles.movimientoCard,
+                  item.tipo === 'egreso' ? styles.egresoCard : styles.ingresoCard
+                ]}
+                onPress={() => navigation.navigate('NewM', { 
+                  ...item,
+                  editar: true,
+                  tipoRegistro,
+                  nombreServicio,
+                  nombreCaja,
+                  subcoleccion: getSubcoleccion(tipoRegistro)
+                })}>
+                <View style={styles.movimientoInfo}>
+                  <Text style={styles.movimientoDescripcion}>{item.descripcion || 'Sin descripción'}</Text>
+                  <Text style={styles.movimientoFecha}>
+                    {item.fecha?.toLocaleDateString('es-PE', { 
+                      day: '2-digit', 
+                      month: 'short', 
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </Text>
+                </View>
+                <Text style={styles.movimientoMonto}>
+                  {item.tipo === 'egreso' ? '-' : '+'} S/ {parseFloat(item.monto).toFixed(2)}
+                </Text>
+              </TouchableOpacity>
+            )}
+            keyExtractor={item => item.id}
+            refreshControl={
+              <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh} 
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Feather name="inbox" size={50} color="#ccc" />
+                <Text style={styles.emptyText}>No hay movimientos registrados</Text>
+              </View>
+            }
+          />
+
+          {/* Botones flotantes */}
+          <View style={styles.bottomBar}>
             <TouchableOpacity 
-              style={styles.addButton}
-              onPress={() => navigation.navigate('NewM')}
-            >
-              <Text style={styles.addButtonText}>Agregar Movimiento</Text>
+              style={styles.bottomButton}
+              onPress={() => handleAddMovimiento('egreso')}>
+              <Feather name="minus-circle" size={20} color="#fff" />
+              <Text style={styles.bottomButtonText}>Egreso</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.bottomButton}
+              onPress={() => handleAddMovimiento('ingreso')}>
+              <Feather name="plus-circle" size={20} color="#fff" />
+              <Text style={styles.bottomButtonText}>Ingreso</Text>
             </TouchableOpacity>
           </View>
-        }
-      />
+        </>
+      ) : (
+        <View style={styles.selectContainer}>
+          <Feather name="database" size={50} color="#0B1B4D" />
+          <Text style={styles.selectText}>Seleccione un servicio y una caja</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -167,128 +282,144 @@ export default function Movimientos() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f5f5f5'
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center'
   },
-  header: {
+  filtersContainer: {
+    backgroundColor: '#fff',
+    padding: 15,
+    margin: 10,
+    borderRadius: 10,
+    elevation: 3
+  },
+  filterRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
-    elevation: 2,
+    marginVertical: 5
   },
-  title: {
-    fontSize: 20,
+  filterLabel: {
+    width: 80,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#0B1B4D'
   },
-  balanceCard: {
-    backgroundColor: '#fff',
-    margin: 20,
-    padding: 20,
-    borderRadius: 15,
-    alignItems: 'center',
-    elevation: 3,
-  },
-  balanceLabel: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 10,
-  },
-  balanceAmount: {
-    fontSize: 32,
-    fontWeight: 'bold',
-  },
-  list: {
+  picker: {
     flex: 1,
-    paddingHorizontal: 20,
+    height: 40
+  },
+  headerBox: {
+    backgroundColor: '#0B1B4D',
+    padding: 20,
+    alignItems: 'center'
+  },
+  cajaTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 5
+  },
+  saldoContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 15,
+    width: '90%',
+    alignItems: 'center',
+    marginVertical: 10
+  },
+  saldoLabel: {
+    fontSize: 16,
+    color: '#0B1B4D',
+    marginBottom: 5
+  },
+  saldoTotal: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#0B1B4D'
+  },
+  montoInicial: {
+    fontSize: 14,
+    color: '#fff',
+    opacity: 0.8
   },
   movimientoCard: {
-    backgroundColor: '#fff',
-    marginBottom: 15,
-    borderRadius: 15,
-    padding: 15,
-    elevation: 2,
-  },
-  movimientoHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    padding: 15,
+    marginHorizontal: 10,
+    marginVertical: 5,
+    borderRadius: 10,
+    elevation: 1
   },
-  tipoIndicator: {
-    width: 4,
-    height: 40,
-    borderRadius: 2,
-    marginRight: 15,
+  egresoCard: {
+    borderLeftWidth: 5,
+    borderLeftColor: '#ff5252'
+  },
+  ingresoCard: {
+    borderLeftWidth: 5,
+    borderLeftColor: '#4caf50'
   },
   movimientoInfo: {
-    flex: 1,
+    flex: 1
   },
-  descripcion: {
+  movimientoDescripcion: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 4,
+    marginBottom: 5
   },
-  fecha: {
+  movimientoFecha: {
     fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
+    color: '#666'
   },
-  categoria: {
-    fontSize: 14,
-    color: '#888',
-  },
-  montoContainer: {
-    alignItems: 'flex-end',
-  },
-  monto: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f44336',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    marginLeft: 5,
-    fontSize: 12,
+  movimientoMonto: {
+    fontSize: 16,
+    fontWeight: 'bold'
   },
   emptyContainer: {
     alignItems: 'center',
-    padding: 50,
+    padding: 50
   },
   emptyText: {
     fontSize: 16,
     color: '#888',
-    marginTop: 20,
-    marginBottom: 30,
+    marginTop: 15
   },
-  addButton: {
-    backgroundColor: '#4CAF50',
+  selectContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  selectText: {
+    fontSize: 18,
+    color: '#0B1B4D',
+    marginTop: 15,
+    textAlign: 'center'
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#0B1B4D',
+    padding: 15,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0
+  },
+  bottomButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E90FF',
     paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 25,
+    paddingVertical: 10,
+    borderRadius: 20
   },
-  addButtonText: {
+  bottomButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-  },
+    marginLeft: 5
+  }
 });

@@ -1,13 +1,16 @@
-
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, ImageBackground, Image, Text, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Feather from '@expo/vector-icons/Feather';
 import registrationService from '../services/registrationService'; //
+import { Picker } from '@react-native-picker/picker';
+
 
 export default function RegistrarGerente() {
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
+  const [tipoDocumento, setTipoDocumento] = useState('DNI');
+  const [numeroDocumento, setNumeroDocumento] = useState('');
   const [email, setEmail] = useState('');  
   const [password, setPassword] = useState('');
   const [confpassword, setConfPassword] = useState('');
@@ -15,6 +18,7 @@ export default function RegistrarGerente() {
 
   const [nombreFocused, setNombreFocused] = useState(false);
   const [apellidoFocused, setApellidoFocused] = useState(false);
+  const [numeroDocumentoFocused, setNumeroDocumentoFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -25,7 +29,7 @@ export default function RegistrarGerente() {
   const navigation = useNavigation();
 
   const handleRegister = async () => {
-    if (!nombre.trim() || !apellido.trim() || !email.trim() || !password.trim() || !confpassword.trim()) {
+    if (!nombre.trim() || !apellido.trim() || !email.trim() || !password.trim() || !confpassword.trim() || !numeroDocumento.trim()) {
       setErrorMessage('Por favor, complete todos los campos.');
       return;
     }
@@ -44,7 +48,14 @@ export default function RegistrarGerente() {
     setErrorMessage('');
 
     try {
-      const result = await registrationService.registerGerente(nombre, apellido, email, password);
+      const result = await registrationService.registerGerente(
+        nombre,
+        apellido,
+        email,
+        password,
+        tipoDocumento,
+        numeroDocumento
+      );
       
       if (result.success) {
         Alert.alert('Éxito', result.message);
@@ -98,6 +109,28 @@ export default function RegistrarGerente() {
           onFocus={() => setApellidoFocused(true)}
           onBlur={() => setApellidoFocused(false)}
         />
+
+        <View style={styles.documentRow}>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={tipoDocumento}
+              onValueChange={(itemValue) => setTipoDocumento(itemValue)}
+              style={styles.picker}
+              mode="dropdown"
+            >
+              <Picker.Item label="DNI" value="DNI" />
+              <Picker.Item label="CE" value="CE" />
+            </Picker>
+          </View>
+          <TextInput
+            style={[styles.inputDocumento]}
+            placeholder="N° Documento"
+            value={numeroDocumento}
+            onChangeText={setNumeroDocumento}
+            keyboardType="numeric"
+            maxLength={tipoDocumento === 'DNI' ? 8 : 12}
+          />
+        </View>
 
         <TextInput
           style={[styles.input, emailFocused && styles.inputFocused]}
@@ -260,5 +293,33 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 13,
     marginBottom: 10,
+  },
+  documentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 10,
+  },
+  pickerContainer: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    marginRight: 10,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+  },
+  picker: {
+    height: 40,
+    width: '100%',
+    borderRadius: 8,
+  },
+  inputDocumento: {
+    flex: 2,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    backgroundColor: '#fff',
   },
 });
